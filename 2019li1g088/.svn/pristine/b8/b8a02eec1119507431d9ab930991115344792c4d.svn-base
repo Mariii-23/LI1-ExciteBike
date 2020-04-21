@@ -1,0 +1,92 @@
+-- | Este módulo define funções comuns da Tarefa 4 do trabalho prático.
+module Tarefa4_2019li1g088 where
+
+import LI11920
+import Tarefa3_2019li1g088
+import Tarefa2_2019li1g088
+import Tarefa1_2019li1g088
+import Tarefa0_2019li1g088
+
+-- * Testes
+-- | Testes unitários da Tarefa 4.
+--
+-- Cada teste é um par (/tempo/,/'Mapa'/,/'Jogador'/).
+testesT4 :: [(Double,Mapa,Jogador)]
+testesT4 = []
+
+-- * Funções principais da Tarefa 4.
+
+-- | Avança o estado de um 'Jogador' um 'passo' em frente, durante um determinado período de tempo.
+passo :: Double -- ^ O tempo decorrido.
+     -> Mapa    -- ^ O mapa utilizado.
+     -> Jogador -- ^ O estado anterior do 'Jogador'.
+     -> Jogador -- ^ O estado do 'Jogador' após um 'passo'.
+passo t m j = move t m (acelera t m j)
+
+-- | Altera a velocidade de um 'Jogador', durante um determinado período de tempo.
+acelera :: Double -- ^ O tempo decorrido.
+     -> Mapa    -- ^ O mapa utilizado.
+     -> Jogador -- ^ O estado anterior do 'Jogador'.
+     -> Jogador -- ^ O estado do 'Jogador' após acelerar.
+--acelera = undefined     
+acelera t mapa j | ver (estadoJogador j )== 0 = aceleraChao j atrito t
+                 | ver (estadoJogador j) == 1 = aceleraAr j t
+                 | otherwise = j
+               where
+                 ver (Chao _) = 0
+                 ver (Ar _ _ _) = 1
+                 ver _ = 2
+                 -- | Posicao do jogador
+                 posicao::(Int,Int)   
+                 posicao = (pistaJogador j, truncate (distanciaJogador j))
+                 -- | Peca aonde o jogador se encontra
+                 peca::Peca
+                 peca = encontraPosicaoMatriz posicao mapa
+                 -- | Piso da peca aonde se encontra o jogador
+                 piso::Piso
+                 piso = h peca
+                 h (Rampa piso _ _) = piso
+                 h (Recta piso _) = piso
+                 -- | Atrito
+                 atrito::Double
+                 atrito = case piso of
+                       Terra->0.25
+                       Relva->0.75
+                       Lama->1.50
+                       Boost->(-0.50)
+                       Cola->3.00
+                 
+-- | Atualizar a velocidade do jogador no chao
+aceleraChao::Jogador->Double->Double->Jogador
+aceleraChao j atrito t = j {velocidadeJogador = corrige velocidadeFinal} 
+ where
+     velocidadeFinal = velocidade + (accelMota-atrito*velocidade)*t 
+     accelJogador::Jogador->Bool
+     accelJogador (Jogador _ _ _ _ (Chao a)) = a
+
+     velocidade = velocidadeJogador j
+     accelMota = if (velocidade<2 && (accelJogador j)) then 1 else 0
+
+corrige::Double->Double
+corrige x = if x>=0 then x else 0
+
+-- | Atualizar a velocidade do jogador no ar
+aceleraAr::Jogador->Double->Jogador
+aceleraAr j@(Jogador a b velo cola (Ar h incli grav)) t= (Jogador a b velocidadeFinal cola (Ar h incli gfinal))
+   -- estadoJogador = ( gravidadeJogador = gfinal) 
+
+  where     
+     velocidadeFinal = velocidade -(resistenciaAR*velocidade*t)
+     velocidade = velocidadeJogador j
+     resistenciaAR = 0.125
+     -- calcular a nova gravidade 
+     gfinal = grav + accelGravidade*t
+     accelGravidade = 1
+
+-- | Altera a posição de 'Jogador', durante um determinado período de tempo.
+move :: Double -- ^ O tempo decorrido.
+     -> Mapa    -- ^ O mapa utilizado.
+     -> Jogador -- ^ O estado anterior do 'Jogador'.
+     -> Jogador -- ^ O estado do 'Jogador' após se movimentar.
+move t mapa j = undefined
+

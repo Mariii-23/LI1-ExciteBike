@@ -1,0 +1,176 @@
+-- | Este módulo define funções comuns da Tarefa 2 do trabalho prático.
+module Tarefa2_2019li1g088 where
+
+  import LI11920
+  import Tarefa0_2019li1g088
+  import Tarefa1_2019li1g088
+  -- * Testes
+  
+  -- | Testes unitários da Tarefa 2.
+  --
+  -- Cada teste é um triplo (/identificador do 'Jogador'/,/'Jogada' a efetuar/,/'Estado' anterior/).
+  testesT2 :: [(Int,Jogada,Estado)]
+  testesT2 = testesTarefa2  
+  --testesTarefa2 estao localizados na tarefa0
+  --
+  -- * Funções principais da Tarefa 2.
+  
+  -- | Efetua uma jogada.
+  jogada :: Int -- ^ O identificador do 'Jogador' que efetua a jogada.
+         -> Jogada -- ^ A 'Jogada' a efetuar.
+         -> Estado -- ^ O 'Estado' anterior.
+         -> Estado -- ^ O 'Estado' resultante após o 'Jogador' efetuar a jogada.
+  jogada numero comando (Estado matrizmapa jogadoresEstado) = estadoFinal comando posicao matrizmapa jogadoresEstado numero
+     where
+              -- | Função que utiliza a lista de 'jogadoresEstado' e o 'Jogador' que se pretende alterar, dando as suas coordenadas.
+              posicao = jogadoratual numero jogadoresEstado
+              jogadoratual::Int->[Jogador]->(Int,Double)
+              jogadoratual numero ((Jogador a b c d e):r) | numero == 0 = (a,b)
+                                                          | otherwise = jogadoratual (numero-1) r
+  -- * Funções auxiliares
+  -- | Função 'estadoFinal', que tem como fim devolver o 'Estado' atualizado.
+  estadoFinal::Jogada->(Int,Double)->Mapa->[Jogador]->Int->Estado
+  estadoFinal comando posicao matrizmapa jogadoresEstado numero = (Estado l1 l2)
+       where
+          l1 | (auxcola jogador1 == True && comando==Dispara) = matrizCola posicao matrizmapa
+             | otherwise = matrizmapa
+                  where jogador1=(encontraIndiceLista numero jogadoresEstado)
+          l2 | (length jogadoresEstado)>1 = (take (numero) jogadoresEstado)++[f]++(drop (numero+1) jogadoresEstado)
+             | otherwise = [f]
+             where
+                f |(comando==Dispara && auxcola jogador1 == False) = jogador1
+                  |(comando==Dispara && auxcola jogador1 == True) = ncola jogador1
+                  |(comando==Desacelera || comando==Acelera)= verificaCondicoes jogador1
+                  |(comando==Movimenta C) || (comando==Movimenta B) = verificaCimaBaixo jogador1 
+                  |(comando==Movimenta E) || (comando==Movimenta D) = verificaar jogador1 
+                   where jogador1=(encontraIndiceLista numero jogadoresEstado)
+
+          -- | FUNÇÕES RELATIVAS À COLA
+          -- | 'Auxcola': função que verifica se o 'Jogador' tem 'Cola', para ser utilizada.
+          auxcola::Jogador->Bool
+          auxcola (Jogador num dist velo cola estado) | cola==0 = False
+                                                      | (lol posicao )==0 = False
+                                                      | (veri estado)== 1 = True
+                                                      | otherwise = False
+                                                        where 
+                                                          veri (Chao _) = 1
+                                                          veri _ = 0
+                                                          lol (a,b) = (truncate b)
+
+          -- | 'ncola': função que altera a 'Cola' do 'Jogador', caso este dispare.
+          ncola::Jogador->Jogador
+          ncola (Jogador num dist velo cola estado) = (Jogador num dist velo (cola-1) estado)                                              
+
+          -- | 'matrizcola': função que dada a posicao do 'Jogador' e do 'Mapa', altera o piso anterior do 'Jogador' para 'Cola'.
+          matrizCola::(Int,Double)->Mapa->Mapa
+          matrizCola (a,b) matrizmapa | ePosicaoMatrizValida' p' matrizmapa = updateMatriz p' meteCola matrizmapa
+                          --          | otherwise = matrizmapa
+                                  where
+                                  p' = (a,(b-1))
+          -- | 'meteCola': função que altera o piso de uma 'Peca' para 'Cola'.
+          meteCola::Peca->Peca
+          meteCola (Rampa _ a1 a2) = Rampa Cola a1 a2
+          meteCola (Recta _ a3) = Recta Cola a3
+
+          -- | FUNÇÕES RELATIVAS AO DESACELERA E AO ACELERA
+          -- | 'verificaCondicoes': função, que após verifica o estado do 'Jogador', 'Acelera' ou 'Desacelera', do mesmo 'Jogador'.
+          verificaCondicoes l@(Jogador num dist velo cola estado) | verii estado ==1 && comando==Acelera = (Jogador num dist velo cola (Chao True))
+                                                                  | verii estado == 1 && comando==Desacelera = (Jogador num dist velo cola (Chao False))
+                                                                  | otherwise = l
+                                                                             where   
+                                                                              verii::EstadoJogador->Int                                                                          
+                                                                              verii (Chao _) = 1
+                                                                              verii _ =0
+          -- | FUNÇÕES RELATIVAS AO CIMA OU BAIXO
+          -- | 'verificaCimaBaixo': função principal, que faz com que o 'Jogador' se movimente, caso seja possível.
+          verificaCimaBaixo l@(Jogador num dist velo cola estado) | variaveis estado ==1 && verifica posicao matrizmapa = movimenta l posicao 
+                                                                  | otherwise = l
+                      where 
+                          verifica (a,b) matrizmapa | a==0 && comando==(Movimenta C) = False
+                                                    | a==((length matrizmapa)-1) && comando== (Movimenta B) = False
+                                                    |otherwise = True
+                          variaveis (Chao _)=1   
+                          variaveis _ = 0      
+          -- | 'movimenta': função secundária, que faz com que o  'Jogador' se movimente.
+          movimenta::Jogador->(Int,Double)->Jogador
+          movimenta l@(Jogador num dist velo cola estado) (m,n) |veriii a == 1 && veriii b==1 = auxrecta a b 
+                                                                |veriii a == 1 && veriii b==0 = auxretarampa a b 
+                                                                |veriii a ==0 && veriii b == 1 = auxramparecta a b 
+                                                                |veriii a ==0 && veriii b==0 = auxRampaRampa a b  
+                                                                  where
+                                                                        -- | a= 'Peca' onde o jogador se encontra.
+                                                                        a = encontraPosicaoMatriz' (m,n) matrizmapa
+                                                                        -- | b = 'Peca' para onde o 'Jogador' pretende efetuar a jogada.
+                                                                        b | comando==(Movimenta C) = encontraPosicaoMatriz' ((m-1), n) matrizmapa
+                                                                          | otherwise = encontraPosicaoMatriz' ((m+1),n) matrizmapa
+                                                                        -- | Verifica se é rampa ou recta.
+                                                                        veriii (Rampa piso1 hi1 hf1) = 0
+                                                                        veriii (Recta piso2 h2) = 1
+                                                                        
+
+                                                                        -- | Função auxiliar para RECTA->RECTA
+                                                                        auxrecta::Peca->Peca->Jogador
+                                                                        auxrecta a b  | h1==h2 && comando==(Movimenta C) = Jogador (num-1) dist velo cola estado
+                                                                                      | h1==h2 && comando==(Movimenta B) = Jogador (num+1) dist velo cola estado 
+                                                                                      | h1>h2 && comando==(Movimenta C) = Jogador (num-1) dist velo cola (Ar (fromIntegral h1) 0 0)
+                                                                                      | h1>h2 && comando==(Movimenta B) = Jogador (num+1) dist velo cola (Ar (fromIntegral h1) 0 0)
+                                                                                      | h1<h2  = (Jogador num dist 0 cola (Morto 1.0))
+                                                                                        where
+                                                                                          -- | Fornece as alturas das rectas.
+                                                                                          alt (Recta _ h)=h
+                                                                                          h1 = alt a 
+                                                                                          h2 = alt b
+
+                                                                        -- | Função auxiliar para RECTA->RAMPA
+                                                                        auxretarampa::Peca->Peca->Jogador
+                                                                        auxretarampa (Recta _ h1) (Rampa _ hi hf) -- |  (alt dist hi hf)>(fromIntegral h1) = Jogador num dist 0 cola (Morto 1)
+                                                                                                                  | (abs (fromIntegral h1-(alt dist hi hf)))<=0.2 && comando==(Movimenta C) = Jogador (num-1) dist velo cola estado
+                                                                                                                  | (abs (fromIntegral h1-(alt dist hi hf)))<=0.2 && comando==(Movimenta B) = Jogador (num+1) dist velo cola estado
+                                                                                                                  | (abs (fromIntegral h1-(alt dist hi hf)))>0.2 && comando==(Movimenta C) = Jogador (num-1) dist 0 cola (Ar (fromIntegral h1) 0 0)
+                                                                                                                  | (abs (fromIntegral h1-(alt dist hi hf)))>0.2 && comando==(Movimenta B) = Jogador (num+1) dist 0 cola (Ar (fromIntegral h1) 0 0)
+
+                                                                        -- | Função auxiliar para RAMPA->RECTA
+                                                                        auxramparecta::Peca->Peca->Jogador
+                                                                        auxramparecta (Rampa _ hi hf) (Recta _ h1)  -- | (alt dist hi hf)<(fromIntegral h1) = Jogador num dist 0 cola (Morto 1)
+                                                                                                                   | ((abs ((alt dist hi hf)- fromIntegral h1))<=0.2)  && comando==(Movimenta C) = Jogador (num-1) dist velo cola estado
+                                                                                                                   | ((abs ((alt dist hi hf)- fromIntegral h1))<=0.2 ) && comando==(Movimenta B) = Jogador (num+1) dist velo cola estado
+                                                                                                                   | (abs ((alt dist hi hf)- fromIntegral h1)>0.2 ) && comando==(Movimenta C) = Jogador (num-1) dist 0 cola (Ar (alt dist hi hf) (inclinacao hi hf) 0)
+                                                                                                                   | (abs ((alt dist hi hf)- fromIntegral h1)>0.2 ) && comando==(Movimenta B) = Jogador (num+1) dist 0 cola (Ar (alt dist hi hf) (inclinacao hi hf) 0)    
+                                                                                                                    
+                                                                        -- | Função auxiliar para RAMPA->RAMPA
+                                                                        auxRampaRampa::Peca->Peca->Jogador
+                                                                        auxRampaRampa (Rampa pisoi1 hi1 hf1) (Rampa piso2 hi2 hf2) -- | (alt1-alt2)<0 = Jogador num dist 0 cola (Morto 1)
+                                                                                                                                   | (abs (alt1-alt2))<=0.2 && comando==(Movimenta C) = Jogador (num-1) dist velo cola (Ar (alt1) (inclinacao hi1 hf1) 0)
+                                                                                                                                   | (abs (alt1-alt2))<=0.2 &&  comando==(Movimenta B) = Jogador (num+1) dist velo cola (Ar (alt1) (inclinacao hi1 hf1) 0)
+                                                                                                                                   | (abs (alt1-alt2))>0.2 && comando==(Movimenta C) = Jogador (num-1) dist velo cola estado
+                                                                                                                                   | (abs (alt1-alt2))>0.2 &&  comando==(Movimenta B) = Jogador (num+1) dist velo cola estado
+                                                                                                                                      where 
+                                                                                                                                          -- | alt1 = altura do 'Jogador'; alt2 = altura do 'Jogador' se estive se na 'Peca', para a qual pretende se mover.
+                                                                                                                                          alt1 = (alt dist hi1 hf1)
+                                                                                                                                          alt2 = (alt dist hi2 hf2)
+                                                                        -- | Função que devolve a altura do 'Jogador', ao longo de uma rampa.
+                                                                        alt::Double->Int->Int->Double
+                                                                        alt x hi hf | hi<hf = (fromIntegral (hf - hi))*((x-fromIntegral (truncate x))) + fromIntegral hi
+                                                                                    | otherwise = fromIntegral (hi-hf)* (1-(x-fromIntegral (truncate x))) + fromIntegral hf
+                                                                        -- | Função que dá a inclinacao de uma rampa.
+                                                                        inclinacao::Int->Int->Double
+                                                                        inclinacao hi hf | hf>hi = (atan (fromIntegral (hf-hi)))*180/pi
+                                                                                         | hi>hf = -((atan (fromIntegral (hi-hf)))*180/pi)
+          -- | FUNÇÕES RELATIVAS AO ESQUERDA E DIREITA
+          -- | Verifica se o 'Jogador' se encontra no ar e, caso isso aconteça, altera a sua rotação.
+          verificaar::Jogador->Jogador
+          verificaar l@(Jogador num dist velo cola estado) | verii estado == 1 = rodar l 
+                                                           | otherwise = l
+                                                                      where
+                                                                        verii::EstadoJogador->Int                                                                          
+                                                                        verii (Ar _ _ _) = 1
+                                                                        verii _ =0
+
+          -- | Função que tem por fim alterar a inclinação do 'Jogador'.
+          rodar l@(Jogador num dist velo cola (Ar a b c)) | comando==(Movimenta D) = (Jogador num dist velo cola (Ar a (corrigeRodar (b-15)) c))
+                                                          | comando==(Movimenta E) = (Jogador num dist velo cola (Ar a (corrigeRodar (b+15)) c))
+
+          --  | Função que corrige a rotação do 'jogador', caso este tenha rodado em demasia.
+          corrigeRodar x | x>=90 = 90
+                         | x<=(-90) = -90
+                         |otherwise = x

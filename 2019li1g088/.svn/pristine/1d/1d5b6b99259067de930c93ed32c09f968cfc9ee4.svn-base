@@ -1,0 +1,58 @@
+-- | Este módulo define funções comuns da Tarefa 5 do trabalho prático.
+module Main where
+
+import LI11920
+import Tarefa4_2019li1g088
+import Graphics.Gloss
+--import Graphics.Gloss.Juicy
+import Graphics.Gloss.Interface.Pure.Game
+
+-- * Tipos de dados auxiliares
+type Pictures = [Picture]
+type EstadoGloss = (Float,Float,Pictures)
+
+-- | Display full screen
+ecra::Display
+ecra = FullScreen
+
+-- | frame
+frame::Int
+frame = 20 --- modificar valor-- talvez 60?!
+
+
+estadoGlossInicial::Pictures->EstadoGloss
+estadoGlossInicial l1 = (0,0,l1)
+
+reageAoTempo::Float->EstadoGloss->EstadoGloss
+reageAoTempo t (x,y,li) = (x,y,li)
+
+reageAoMOvimento::Event->EstadoGloss->EstadoGloss
+-- | Teclas do joagdor 2
+reageAoMOvimento (EventKey (Char 'w') Down _ _) (x,y,li) = (x,y+20,li)
+reageAoMOvimento (EventKey (Char 's') Down _ _) (x,y,li) = (x,y-20,li)
+reageAoMOvimento (EventKey (Char 'd') Down _ _) (x,y,li) = (x+20,y,li)
+reageAoMOvimento (EventKey (Char 'a') Down _ _) (x,y,li) = (x-20,y,li)
+reageAoMOvimento _ q=q
+
+desenhaMapa::EstadoGloss->Picture
+desenhaMapa (x,y,li) = Pictures[m]
+                    where m = Translate x y (head li)
+
+
+-- | Função principal da Tarefa 5.
+--
+-- __NB:__ Esta Tarefa é completamente livre. Deve utilizar a biblioteca <http://hackage.haskell.org/package/gloss gloss> para animar o jogo, e reutilizar __de forma completa__ as funções das tarefas anteriores.
+main :: IO ()
+main = do
+    m <- loadBMP "Imagens/aa.bmp"
+    play ecra                              -- minha janela do jogo
+        black                              -- cor do fundo do ecra
+        frame                              -- frame rate
+        (estadoGlossInicial [m])             --estado inicial
+        desenhaMapa
+        reageAoMOvimento                   --reage ao movimento
+        reageAoTempo                       -- reage ao tempo
+
+
+
+

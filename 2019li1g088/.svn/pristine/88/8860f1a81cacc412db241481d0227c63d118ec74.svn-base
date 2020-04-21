@@ -1,0 +1,155 @@
+-- | Este módulo define funções comuns da Tarefa 5 do trabalho prático.
+module Main where
+
+import LI11920
+import Tarefa4_2019li1g088
+import Tarefa3_2019li1g088
+import Tarefa2_2019li1g088
+import Tarefa1_2019li1g088
+import Tarefa0_2019li1g088
+import Graphics.Gloss
+import Graphics.Gloss.Juicy
+import Graphics.Gloss.Interface.Pure.Game
+--import Data.Matrix
+import Graphics.Gloss.Interface.IO.Animate
+--import Graphics.Gloss.Interface.Pure.Game.Polygon
+
+
+-- * Tipos de dados auxiliares
+type Pictures = [Picture]
+type EstadoGloss =(Estado,Pictures)
+
+estadoGlossInicial::Pictures->EstadoGloss
+estadoGlossInicial li = (estadoTeste,li)
+
+-- | Display full screen
+ecra::Display
+ecra = FullScreen
+
+-- | frame
+frame::Int
+frame = 20 --- modificar valor-- talvez 60?!
+
+--x inicial
+linha::Float
+linha = (-500)
+
+--y inicial
+coluna::Float
+coluna = (-300) --defenir melhor
+
+espaco::Float
+espaco = 20 -- defenir depois
+
+estadoTeste::Estado
+estadoTeste = (Estado (gera 4 40 0) [(Jogador 0 11.9 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False))])
+
+
+reageAoTempo::Float->EstadoGloss->EstadoGloss
+reageAoTempo t e = e
+
+reageAoMOvimento::Event->EstadoGloss->EstadoGloss
+-- | Teclas do joagdor 2
+reageAoMOvimento _ e = e
+--reageAoMOvimento (EventKey (Char 'w') Down _ _) (x,y,li) = (x,y+80,li)
+--reageAoMOvimento (EventKey (Char 's') Down _ _) (x,y,li) = (x,y-80,li)
+--reageAoMOvimento (EventKey (Char 'd') Down _ _) (x,y,li) = (x+100,y,li)
+--reageAoMOvimento (EventKey (Char 'a') Down _ _) (x,y,li) = (x-100,y,li)
+--reageAoMOvimento _ q=q
+
+desenhaGLossInicial::EstadoGloss->Picture
+desenhaGLossInicial ((Estado mapa j),li) = Pictures [fundo',ceu,mapa']
+                              where 
+                              mapa'= Pictures (geraMapa mapa linha coluna)
+                              fundo' = (scale 1.5 1.7 ((translate (0) (0) (li !! 0))))
+                              ceu = (scale 1.5 1.3 (translate (0) (150) (li !! 1)))
+
+
+-- | Função principal da Tarefa 5.
+--
+-- __NB:__ Esta Tarefa é completamente livre. Deve utilizar a biblioteca <http://hackage.haskell.org/package/gloss gloss> para animar o jogo, e reutilizar __de forma completa__ as funções das tarefas anteriores.
+main :: IO ()
+main = do 
+     fundo <- loadBMP "IMAGENS/fundo.bmp"
+     ceu <- loadBMP "IMAGENS/ceu.bmp"
+     j1 <- loadBMP "IMAGENS/jipeAzul.bmp"
+     j1m <- loadBMP "IMAGENS/jipeAzulM.bmp"
+     j2 <- loadBMP "IMAGENS/jipeRosa.bmp"
+     j2m <- loadBMP "IMAGENS/jipeRosaM.bmp"
+     j3 <- loadBMP "IMAGENS/jipeVerde.bmp"
+     j3m <- loadBMP "IMAGENS/jipeVerdeM.bmp"
+     j4 <- loadBMP "IMAGENS/jipeVermelho.bmp"
+     j4m <- loadBMP "IMAGENS/jipeVermelhoM.bmp"
+     play ecra                              -- minha janela do jogo
+         black                              -- cor do fundo do ecra
+         frame                              -- frame rate
+         (estadoGlossInicial [fundo,ceu,j1,j1m,j2,j2m,j3,j3m,j4,j4m])             --estado inicial
+         desenhaGLossInicial
+         reageAoMOvimento                   --reage ao movimento
+         reageAoTempo                       -- reage ao tempo
+--display ecra white aaaa
+--(Pictures [m',m,l])
+
+comp::Float
+comp=50
+--vetor translate
+p::Float
+p=0
+p'::Float
+p'=50
+
+--verificaOpacidade
+opacidade = withAlpha
+verificaOpacidade::Pictures->Double->Double->Pictures
+verificaOpacidade = undefined
+
+
+
+geraMapa::Mapa->Float->Float->Pictures
+geraMapa [] _ _ = []
+geraMapa (a:b) x y =  (geraMapa b (x+p) (y+p')) ++ (umaPista a x y)
+
+umaPista::Pista->Float->Float->Pictures
+umaPista [] _ _ = []
+umaPista (a:b) x y = (umaPeca a x y) ++ umaPista b (x+comp) y
+
+umaPeca::Peca->Float->Float->Pictures
+umaPeca (Recta piso h) x y = [m,m',l]
+          where 
+            m = (color f' ( Polygon [(x,y),(x,y+lp),(comp+x,lp+y),(x+comp,y)]))
+            m' = Translate p p' m
+            l =color f (Polygon [(x,lp+y),(p+x,y+lp+p'),(x+comp+p,y+lp+p'),(x+comp,y+lp)])
+            lp = ((fromIntegral h)*comp)
+            
+            boost'' = color red (Polygon [(x+(comp/4),y),(x+(comp/4)+p,y+p'),(x+(comp/2)+(p/4),((y+p')/2))]) 
+            boost' = translate (-(comp/4)) ((fromIntegral h)*comp) boost''
+
+            f = dim (bright a)
+            a | piso==Relva = makeColorI 92 647 51 300
+              | piso==Terra = makeColorI 92 51 23 300
+              | piso==Lama = makeColorI 184 134 11 300
+              | piso==Boost = makeColorI 0 200 200 300
+              | piso==Cola = makeColorI 217 135 25 300
+            --poe cor nas paredes
+            f' = dark f
+
+umaPeca (Rampa piso hi' hf') x y = [parede',base,parede]
+      where
+            parede= color f'  (Polygon [(x,y),(x,y+comp*hi),(x+comp,y+comp*hf),(x+comp,y)])
+            parede' = Translate p p' parede
+            base = color f (Polygon [(x,y+comp*hi),(x+p,y+comp*hi+p'),(x+p+comp,y+comp*hf+p'),(x+comp,hf*comp+y)])
+            hf = fromIntegral hf'
+            hi = fromIntegral hi'
+            dif' = hf'-hi' 
+         
+            f = dim (bright a)
+            a | piso==Relva = makeColorI 92 647 51 300
+              | piso==Terra = makeColorI 92 51 23 300
+              | piso==Lama = makeColorI 184 134 11 300
+              | piso==Boost = makeColorI 0 200 200 300
+              | piso==Cola = makeColorI 217 135 25 300
+           
+            f' = dark f
+ 
+      
+            

@@ -1,0 +1,630 @@
+-- | Este módulo define funções comuns da Tarefa 5 do trabalho prático.
+module Main where
+
+import LI11920
+import Tarefa6_2019li1g088
+import Tarefa4_2019li1g088
+import Tarefa3_2019li1g088
+import Tarefa2_2019li1g088
+import Tarefa1_2019li1g088
+import Tarefa0_2019li1g088
+import Graphics.Gloss
+import Graphics.Gloss.Juicy
+import Graphics.Gloss.Interface.Pure.Game
+--import Data.Matrix
+import Graphics.Gloss.Interface.IO.Animate
+--import GeraMapa.hs
+--import Graphics.Gloss.Interface.Pure.Game.Polygon
+
+
+-- * Tipos de dados auxiliares
+type Pictures = [Picture]
+type EstadoGloss =(Estado,Pictures,Int)
+                      
+-- | Estado Gloss Inicial
+estadoGlossInicial::Pictures->EstadoGloss
+estadoGlossInicial li = (estadoTeste 2,li,0)
+
+-- | Display full screen
+ecra::Display
+ecra = FullScreen
+
+-- | frame
+frame::Int
+frame = 60 
+
+-- | x inicial
+linha::Float
+linha = (-330)
+
+-- | y inicial
+coluna::Float
+coluna = (-200)
+
+-- | Comprimento de uma peca
+comp::Float
+comp=75
+
+-- | vetor translate do gera mapa
+-- | x
+p::Float
+p=0
+-- | y
+p'::Float
+p'=75
+
+-- | Um 'estado' defenido por nos
+estadoTeste::Int->Estado
+--estadoTeste = (Estado (gera 4 25 4) [(Jogador 0 0 0 4 (Chao False)),(Jogador 1 0 0 4 (Chao False)),(Jogador 2 0 0 4 (Chao False)),(Jogador 3 0 0 4 (Chao False))])
+estadoTeste p = (Estado p' [(Jogador 0 0 0 4 (Chao False)),(Jogador 1 0 0 4 (Chao False)),(Jogador 2 0 0 4 (Chao False)),(Jogador 3 0 0 4 (Chao False))])
+    where
+      p'| p == 1 = (gera 4 15 9) -- facil
+        | p == 2 = (gera 4 40 4) -- medio 
+        | otherwise = (gera 4 30 7) -- dificil
+
+-- * Função principal da Tarefa 5.
+--
+-- __NB:__ Esta Tarefa é completamente livre. Deve utilizar a biblioteca <http://hackage.haskell.org/package/gloss gloss> para animar o jogo, e reutilizar __de forma completa__ as funções das tarefas anteriores.
+main :: IO ()
+main = do 
+     fundo <- loadBMP "IMAGENS/fundo.bmp"
+     ceu <- loadBMP "IMAGENS/ceu.bmp"     
+     rel <- loadBMP "IMAGENS/relva_2.bmp"
+     j1 <- loadBMP "IMAGENS/jipeAzul.bmp"
+     j1m <- loadBMP "IMAGENS/jipeAzulM.bmp"
+     j2 <- loadBMP "IMAGENS/jipeRosa.bmp"
+     j2m <- loadBMP "IMAGENS/jipeRosaM.bmp"
+     j3 <- loadBMP "IMAGENS/jipeVerde.bmp"
+     j3m <- loadBMP "IMAGENS/jipeVerdeM.bmp"
+     j4 <- loadBMP "IMAGENS/jipeVermelho.bmp"
+     j4m <- loadBMP "IMAGENS/jipeVermelhoM.bmp"     
+     f1 <- loadBMP "IMAGENS/galaxia.bmp"
+     f2 <- loadBMP "IMAGENS/chao.bmp"
+     st <- loadBMP "IMAGENS/start.bmp"
+     j <- loadBMP "IMAGENS/jipei.bmp"
+     re <- loadBMP "IMAGENS/regras2.bmp"
+     tf <- loadBMP "IMAGENS/trofeu.bmp"
+     verde <- loadBMP "IMAGENS/verde.bmp"
+     t1 <- loadBMP "IMAGENS/trofeu1.bmp"
+     t4 <- loadBMP "IMAGENS/trofeu2.bmp"
+     t3 <- loadBMP "IMAGENS/trofeu3.bmp"
+     t2 <- loadBMP "IMAGENS/trofeu22.bmp"  
+     p1 <- loadBMP "IMAGENS/1Player.bmp"     
+     p2 <- loadBMP "IMAGENS/2Players.bmp"     
+     p3 <- loadBMP "IMAGENS/3players.bmp"     
+     p4 <- loadBMP "IMAGENS/4players.bmp"  
+     xx <- loadBMP "IMAGENS/xx.bmp"  
+     x <- loadBMP "IMAGENS/x.bmp"    
+     pp1 <- loadBMP "IMAGENS/1P.bmp"  
+     pp2 <- loadBMP "IMAGENS/2P.bmp"  
+     pp3 <- loadBMP "IMAGENS/3P.bmp"  
+     pp4 <- loadBMP "IMAGENS/4P.bmp"  
+     m <- loadBMP "IMAGENS/menu.bmp" 
+     m1 <- loadBMP "IMAGENS/menu1.bmp"     
+     r1 <- loadBMP "IMAGENS/r1.bmp" 
+     r2 <- loadBMP "IMAGENS/r2.bmp" 
+     r3 <- loadBMP "IMAGENS/r3.bmp" 
+     r4 <- loadBMP "IMAGENS/r4.bmp" 
+     nn <- loadBMP "IMAGENS/nome.bmp" 
+     rr <- loadBMP "IMAGENS/repe.bmp"   
+     home <- loadBMP "IMAGENS/home.bmp"  
+     jf <- loadBMP "IMAGENS/jipeee.bmp"   
+
+     play ecra                              -- minha janela do jogo
+          white                            -- cor do fundo do ecra
+          frame                              -- frame rate
+          (estadoGlossInicial [fundo,ceu,j1,j1m,j2,j2m,j3,j3m,j4,j4m,f1,f2,st,j,re,rel,tf,verde,t1,t2,t3,t4,p1,p2,p3,p4,xx,x,home,jf,pp1,pp2,pp3,pp4,m,m1,r1,r2,r3,r4,nn,rr])   --estado inicial
+          desenhaGLossInicial
+          reageAoMOvimento                   --reage ao movimento
+          reageAoTempo                       -- reage ao tempo
+
+-- * Funcao que desenha o jogo
+desenhaGLossInicial::EstadoGloss->Picture
+desenhaGLossInicial e@((Estado mapa j),li,p) = jogar e
+
+-- * Funcao que faz o nosso 'Estado' reagir ao longo do tempo, atualizando-o
+reageAoTempo::Float->EstadoGloss->EstadoGloss
+reageAoTempo _ (e,li,0)= (estadoTeste 2,li,0)
+
+reageAoTempo t (a@(Estado mapa j),li,3) =((Estado mapa auxj),li,3)
+            where 
+              auxj = map (passo (realToFrac t) mapa) j
+              (Estado mapa' j') = (jogada' 1 p2 (jogada' 2 p3 (jogada' 3 p4 a)))
+              p2 = maybeJogada (bot 1 a)
+              p3 = maybeJogada (bot 2 a)
+              p4 = maybeJogada (bot 3 a)
+
+reageAoTempo t (a@(Estado mapa j),li,4) =((Estado mapa auxj),li,4)
+            where 
+              auxj = map (passo (realToFrac t) mapa) j
+              (Estado mapa' j') = (jogada' 3 p4 (jogada' 2 p a))
+              p = maybeJogada (bot 2 a)
+              p4 = maybeJogada (bot 3 a)    
+
+reageAoTempo t (a@(Estado mapa j),li,5) =((Estado mapa auxj),li,5)
+            where 
+              auxj = map (passo (realToFrac t) mapa) j
+              (Estado mapa' j') = jogada' 3 p a
+              p = maybeJogada (bot 3 a)      
+
+reageAoTempo t ((Estado mapa j),li,p) =((Estado mapa auxj),li,p)
+            where 
+              auxj = map (passo (realToFrac t) mapa) j
+              
+-- * Funcao que reage a um 'Event', atualizando o 'EstadoGloss'
+reageAoMOvimento::Event->EstadoGloss->EstadoGloss
+-- | MENU
+reageAoMOvimento (EventKey (SpecialKey KeyHome) Down _ _) (a,li,p) = (a,li,0)
+--reageAoMOvimento (EventKey (SpecialKey KeyHome) Down _ _) (a,li,p) = (a,li,11)
+
+reageAoMOvimento (EventKey (SpecialKey KeyEnter) Down _ _) (a,li,0) = (a,li,2)
+reageAoMOvimento (EventKey (SpecialKey KeyDown) Down _ _) (a,li,0) = (a,li,7)
+reageAoMOvimento (EventKey (SpecialKey KeyEnter) Down _ _) (a,li,7) = (a,li,1)
+reageAoMOvimento (EventKey (SpecialKey KeyUp) Down _ _) (a,li,7) = (a,li,0)
+
+-- | Regras
+reageAoMOvimento (EventKey (SpecialKey KeyEnter) Down _ _) (a,li,1) = (a,li,0)
+
+-- | Modo de Jogo
+reageAoMOvimento (EventKey (SpecialKey KeyEnter) Down _ _) (a,li,2) = (a,li,3)
+reageAoMOvimento (EventKey (SpecialKey KeyEnter) Down _ _) (a,li,8) = (a,li,4)
+reageAoMOvimento (EventKey (SpecialKey KeyEnter) Down _ _) (a,li,9) = (a,li,5)
+reageAoMOvimento (EventKey (SpecialKey KeyEnter) Down _ _) (a,li,10) = (a,li,6)
+reageAoMOvimento (EventKey (SpecialKey KeyEnter) Down _ _) (a,li,11) = (a,li,0)
+
+reageAoMOvimento (EventKey (SpecialKey KeyRight) Down _ _) (a,li,2) = (a,li,8)
+reageAoMOvimento (EventKey (SpecialKey KeyRight) Down _ _) (a,li,8) = (a,li,9)
+reageAoMOvimento (EventKey (SpecialKey KeyRight) Down _ _) (a,li,9) = (a,li,10)
+reageAoMOvimento (EventKey (SpecialKey KeyLeft) Down _ _) (a,li,8) = (a,li,2)
+reageAoMOvimento (EventKey (SpecialKey KeyLeft) Down _ _) (a,li,9) = (a,li,8)
+reageAoMOvimento (EventKey (SpecialKey KeyLeft) Down _ _) (a,li,10) = (a,li,9)
+
+reageAoMOvimento (EventKey (SpecialKey KeyDown) Down _ _) (a,li,2) = (a,li,11)
+reageAoMOvimento (EventKey (SpecialKey KeyDown) Down _ _) (a,li,8) = (a,li,11)
+reageAoMOvimento (EventKey (SpecialKey KeyDown) Down _ _) (a,li,9) = (a,li,11)
+reageAoMOvimento (EventKey (SpecialKey KeyDown) Down _ _) (a,li,10) = (a,li,11)
+
+reageAoMOvimento (EventKey (SpecialKey KeyUp) Down _ _) (a,li,11) = (a,li,2)
+
+-- | Controles dos jogadores 1Player
+-- | Player 1
+reageAoMOvimento (EventKey (Char ',') Down _ _) (a,li,3) = (jogada 0 Desacelera a,li,3)
+reageAoMOvimento (EventKey (Char '.') Down _ _) (a,li,3) = (jogada 0 Acelera a,li,3)
+reageAoMOvimento (EventKey (SpecialKey KeyDown) Down _ _) (a,li,3) = (jogada 0 (Movimenta C) a,li,3)
+reageAoMOvimento (EventKey (SpecialKey KeyUp) Down _ _) (a,li,3) = (jogada 0 (Movimenta B) a,li,3)
+reageAoMOvimento (EventKey (SpecialKey KeyLeft) Down _ _) (a,li,3) = (jogada 0 (Movimenta E) a,li,3)
+reageAoMOvimento (EventKey (SpecialKey KeyRight) Down _ _) (a,li,3) = (jogada 0 (Movimenta D) a,li,3)      
+reageAoMOvimento (EventKey (Char '-') Down _ _) (a,li,3) = (jogada 0 Dispara a,li,3)
+-- | Bots
+reageAoMOvimento _ (a,li,3) = ((jogada' 1 p2 (jogada' 2 p4 (jogada' 3 p3 a))),li,3)
+   where p2 = maybeJogada (bot 1 a)
+         p3 = maybeJogada (bot 2 a)
+         p4 = maybeJogada (bot 3 a)
+
+
+-- | Controles dos jogadores 2Players
+-- | Player 1
+reageAoMOvimento (EventKey (Char ',') Down _ _) (a,li,4) = (jogada 0 Desacelera a,li,4)
+reageAoMOvimento (EventKey (Char '.') Down _ _) (a,li,4) = (jogada 0 Acelera a,li,4)
+reageAoMOvimento (EventKey (SpecialKey KeyDown) Down _ _) (a,li,4) = (jogada 0 (Movimenta C) a,li,4)
+reageAoMOvimento (EventKey (SpecialKey KeyUp) Down _ _) (a,li,4) = (jogada 0 (Movimenta B) a,li,4)
+reageAoMOvimento (EventKey (SpecialKey KeyLeft) Down _ _) (a,li,4) = (jogada 0 (Movimenta E) a,li,4)
+reageAoMOvimento (EventKey (SpecialKey KeyRight) Down _ _) (a,li,4) = (jogada 0 (Movimenta D) a,li,4)      
+reageAoMOvimento (EventKey (Char '-') Down _ _) (a,li,4) = (jogada 0 Dispara a,li,4)
+-- | Player 2
+reageAoMOvimento (EventKey (Char '1') Down _ _) (a,li,4) = (jogada 1 Desacelera a,li,4)
+reageAoMOvimento (EventKey (Char '2') Down _ _) (a,li,4) = (jogada 1 Acelera a,li,4)
+reageAoMOvimento (EventKey (Char 's') Down _ _) (a,li,4) = (jogada 1 (Movimenta C) a,li,4)
+reageAoMOvimento (EventKey (Char 'w') Down _ _) (a,li,4) = (jogada 1 (Movimenta B) a,li,4)
+reageAoMOvimento (EventKey (Char 'a') Down _ _) (a,li,4) = (jogada 1 (Movimenta E) a,li,4)
+reageAoMOvimento (EventKey (Char 'd') Down _ _) (a,li,4) = (jogada 1 (Movimenta D) a,li,4)      
+reageAoMOvimento (EventKey (Char '3') Down _ _) (a,li,4) = (jogada 1 Dispara a,li,4) 
+-- | Bots
+reageAoMOvimento _ (a,li,4) = ((jogada' 3 p4 (jogada' 2 p a)),li,4)
+    where p = maybeJogada (bot 2 a)
+          p4 = maybeJogada (bot 3 a)
+
+-- | Controles dos jogadores 3Players
+-- | Player 1
+reageAoMOvimento (EventKey (Char ',') Down _ _) (a,li,5) = (jogada 0 Desacelera a,li,5)
+reageAoMOvimento (EventKey (Char '.') Down _ _) (a,li,5) = (jogada 0 Acelera a,li,5)
+reageAoMOvimento (EventKey (SpecialKey KeyDown) Down _ _) (a,li,5) = (jogada 0 (Movimenta C) a,li,5)
+reageAoMOvimento (EventKey (SpecialKey KeyUp) Down _ _) (a,li,5) = (jogada 0 (Movimenta B) a,li,5)
+reageAoMOvimento (EventKey (SpecialKey KeyLeft) Down _ _) (a,li,5) = (jogada 0 (Movimenta E) a,li,5)
+reageAoMOvimento (EventKey (SpecialKey KeyRight) Down _ _) (a,li,5) = (jogada 0 (Movimenta D) a,li,5)      
+reageAoMOvimento (EventKey (Char '-') Down _ _) (a,li,5) = (jogada 0 Dispara a,li,5)
+-- | Player 2
+reageAoMOvimento (EventKey (Char '1') Down _ _) (a,li,5) = (jogada 1 Desacelera a,li,5)
+reageAoMOvimento (EventKey (Char '2') Down _ _) (a,li,5) = (jogada 1 Acelera a,li,5)
+reageAoMOvimento (EventKey (Char 's') Down _ _) (a,li,5) = (jogada 1 (Movimenta C) a,li,5)
+reageAoMOvimento (EventKey (Char 'w') Down _ _) (a,li,5) = (jogada 1 (Movimenta B) a,li,5)
+reageAoMOvimento (EventKey (Char 'a') Down _ _) (a,li,5) = (jogada 1 (Movimenta E) a,li,5)
+reageAoMOvimento (EventKey (Char 'd') Down _ _) (a,li,5) = (jogada 1 (Movimenta D) a,li,5)      
+reageAoMOvimento (EventKey (Char '3') Down _ _) (a,li,5) = (jogada 1 Dispara a,li,5) 
+-- | Player 3
+reageAoMOvimento (EventKey (Char '6') Down _ _) (a,li,5) = (jogada 2 Desacelera a,li,5)
+reageAoMOvimento (EventKey (Char '7') Down _ _) (a,li,5) = (jogada 2 Acelera a,li,5)
+reageAoMOvimento (EventKey (Char 'k') Down _ _) (a,li,5) = (jogada 2 (Movimenta C) a,li,5)
+reageAoMOvimento (EventKey (Char 'i') Down _ _) (a,li,5) = (jogada 2 (Movimenta B) a,li,5)
+reageAoMOvimento (EventKey (Char 'j') Down _ _) (a,li,5) = (jogada 2 (Movimenta E) a,li,5)
+reageAoMOvimento (EventKey (Char 'l') Down _ _) (a,li,5) = (jogada 2 (Movimenta D) a,li,5)      
+reageAoMOvimento (EventKey (Char '8') Down _ _) (a,li,5) = (jogada 2 Dispara a,li,5) 
+-- | Player 4 
+reageAoMOvimento _ (a,li,5) = (jogada' 3 p a,li,5)
+    where p = maybeJogada (bot 3 a)
+
+-- | Controles dos jogadores 4Players
+-- | Player 1
+reageAoMOvimento (EventKey (Char ',') Down _ _) (a,li,6) = (jogada 0 Desacelera a,li,6)
+reageAoMOvimento (EventKey (Char '.') Down _ _) (a,li,6) = (jogada 0 Acelera a,li,6)
+reageAoMOvimento (EventKey (SpecialKey KeyDown) Down _ _) (a,li,6) = (jogada 0 (Movimenta C) a,li,6)
+reageAoMOvimento (EventKey (SpecialKey KeyUp) Down _ _) (a,li,6) = (jogada 0 (Movimenta B) a,li,6)
+reageAoMOvimento (EventKey (SpecialKey KeyLeft) Down _ _) (a,li,6) = (jogada 0 (Movimenta E) a,li,6)
+reageAoMOvimento (EventKey (SpecialKey KeyRight) Down _ _) (a,li,6) = (jogada 0 (Movimenta D) a,li,6)      
+reageAoMOvimento (EventKey (Char '-') Down _ _) (a,li,6) = (jogada 0 Dispara a,li,6)
+-- | Player 2
+reageAoMOvimento (EventKey (Char '1') Down _ _) (a,li,6) = (jogada 1 Desacelera a,li,6)
+reageAoMOvimento (EventKey (Char '2') Down _ _) (a,li,6) = (jogada 1 Acelera a,li,6)
+reageAoMOvimento (EventKey (Char 's') Down _ _) (a,li,6) = (jogada 1 (Movimenta C) a,li,6)
+reageAoMOvimento (EventKey (Char 'w') Down _ _) (a,li,6) = (jogada 1 (Movimenta B) a,li,6)
+reageAoMOvimento (EventKey (Char 'a') Down _ _) (a,li,6) = (jogada 1 (Movimenta E) a,li,6)
+reageAoMOvimento (EventKey (Char 'd') Down _ _) (a,li,6) = (jogada 1 (Movimenta D) a,li,6)      
+reageAoMOvimento (EventKey (Char '3') Down _ _) (a,li,6) = (jogada 1 Dispara a,li,6) 
+-- | Player 3
+reageAoMOvimento (EventKey (Char '6') Down _ _) (a,li,6) = (jogada 2 Desacelera a,li,6)
+reageAoMOvimento (EventKey (Char '7') Down _ _) (a,li,6) = (jogada 2 Acelera a,li,6)
+reageAoMOvimento (EventKey (Char 'k') Down _ _) (a,li,6) = (jogada 2 (Movimenta C) a,li,6)
+reageAoMOvimento (EventKey (Char 'i') Down _ _) (a,li,6) = (jogada 2 (Movimenta B) a,li,6)
+reageAoMOvimento (EventKey (Char 'j') Down _ _) (a,li,6) = (jogada 2 (Movimenta E) a,li,6)
+reageAoMOvimento (EventKey (Char 'l') Down _ _) (a,li,6) = (jogada 2 (Movimenta D) a,li,6)      
+reageAoMOvimento (EventKey (Char '8') Down _ _) (a,li,6) = (jogada 2 Dispara a,li,6) 
+-- | Player 4
+reageAoMOvimento (EventKey (Char 'z') Down _ _) (a,li,6) = (jogada 3 Desacelera a,li,6)
+reageAoMOvimento (EventKey (Char 'x') Down _ _) (a,li,6) = (jogada 3 Acelera a,li,6)
+reageAoMOvimento (EventKey (Char 'b') Down _ _) (a,li,6) = (jogada 3 (Movimenta C) a,li,6)
+reageAoMOvimento (EventKey (Char 'h') Down _ _) (a,li,6) = (jogada 3 (Movimenta B) a,li,6)
+reageAoMOvimento (EventKey (Char 'v') Down _ _) (a,li,6) = (jogada 3 (Movimenta E) a,li,6)
+reageAoMOvimento (EventKey (Char 'n') Down _ _) (a,li,6) = (jogada 3 (Movimenta D) a,li,6)      
+reageAoMOvimento (EventKey (Char 'c') Down _ _) (a,li,6) = (jogada 3 Dispara a,li,6) 
+                 
+reageAoMOvimento _ q=q
+
+
+-- | Desenhar o nosso jogo
+jogar::EstadoGloss->Picture
+jogar e@((Estado mapa j),li,20) = jogar e 
+jogar e@((Estado mapa j),li,p) | elem p [0,7] =  desenhaMenu li p
+jogar e@((Estado mapa j),li,1) = menuRegras li
+jogar e@((Estado mapa j),li,p) | elem p [2,8,9,10,11] =  umOuMais li p
+jogar e@((Estado mapa j),li,11) = pausa li
+
+-- | Jogar com 1,2,3,4 players
+jogar e@((Estado mapa j),li,p) =Pictures ([fundo',ceu,(movimentaMapa mapa' j' p)] ++ (tabelaClassificacao j li 0) )
+  --Pictures ([(desenhaMapa e )]  ++ (desenhaJogadores j lj 0 mapa a)) 
+              where lj = listaEntres 2 9 li
+                    (a:b) = j
+                    j' = corrigeJs j mapa
+                    fundo' = (scale 1.5 1.7 ((translate (0) (0) (li !! 0))))
+                    ceu = (scale 1.5 1.3 (translate (0) (150) (li !! 1)))
+                --    relva = (scale 3 3 (translate (0) (-170) (li !! 15)))
+                    mapa' =Pictures (geraMapaJogadores' mapa linha coluna j 0 0 lj)
+
+
+-- | Desenha o menu inicial do jogo
+desenhaMenu::Pictures->Int->Picture
+desenhaMenu li p = Pictures ([jipe,nome'] ++ a)
+                where 
+                  
+                  a =map (Translate 0 0) [start,regras,xx,x]
+
+                  li' = listaEntres 10 14 li 
+                  [f1,f2,st,j,re] = li'
+                  start = (scale 1 1 (translate (0) (-90) st))
+                  jipe = (scale 1 1 (translate (-360) (100) j))
+                  regras = (scale 0.5 0.5 (translate (0) (-370) re))
+                  lx = listaEntres 26 27 li 
+                  [xx',x'] = lx
+                  xx = (scale 0.2 0.2 (translate (-950) (-450) f'))
+                  x = (scale 0.2 0.2 (translate (-950) (-935) f))
+                  f | p==0 =x'
+                    | otherwise = xx'
+                  f' | p==0 = xx'
+                     | otherwise = x'
+                  nome = (!!) li 40
+                  nome' = Translate (60) (60) (scale 1.5 1.5 nome)
+                    
+
+
+-- | Desenha o menu das regras
+menuRegras::Pictures->Picture
+menuRegras li = Pictures [r1',r2',r3',r4',m1',atrito',home',jipe']
+               where
+                 -- | Imagens dos controles dos Players
+                 lx = listaEntres 36 39 li
+                 [r1,r2,r3,r4] = lx 
+                 r1' = Translate (-500) (200) (scale 0.6 0.6 r1)
+                 r2' = Translate (-200) (195) (scale 0.6 0.6 r2)
+                 r3' = Translate (105) (195) (scale 0.6 0.6 r3)
+                 r4' = Translate (400) (190) (scale 0.6 0.6 r4)
+
+                 atrito = (!!) li 41
+                 atrito' = Translate (-340) (-150) (scale 0.7 0.7 atrito)
+
+                 home = (!!) li 28
+                 home' = Translate (250) (-80) (scale 0.6 0.6 home)
+
+                 jipe = (!!) li 29
+                 jipe' = Translate (150) (-230) (scale 1 1 jipe)
+
+                 -- | Imagens dos modos menus
+                 m = (!!) li 34
+                 m1' = Translate (695) (-380) (scale 0.7 0.7 m)
+                 
+
+
+-- | Desenha o menu onde sera escolhido quantos players seram
+umOuMais::Pictures->Int->Picture
+umOuMais li p = a'
+      where
+        a' = Translate 0 50 ( Pictures a)
+        a | p==2 = [pp1',p2',p3',p4',x1,x2,x3,x4,m']
+          | p==8 = [p1',pp2',p3',p4',x1,x2,x3,x4,m']
+          | p==9 = [p1',p2',pp3',p4',x1,x2,x3,x4,m']
+          | p==10 = [p1',p2',p3',pp4',x1,x2,x3,x4,m']
+          | otherwise = [p1',p2',p3',p4',x1,x2,x3,x4,m1']
+        -- | Imagens dos modos a preto
+        li' = listaEntres 22 25 li
+        [p1,p2,p3,p4] = li'
+        p1' = Translate (-450) (0) p1
+        p2' = Translate (-150) (0) p2
+        p3' = Translate (150) (0) p3
+        p4' = Translate (450) (0) p4
+        -- | Imagens dos quadrados
+        lx = listaEntres 26 27 li 
+        [xx',x'] = lx
+        x1 = Translate (-450) (-240) (scale 0.25 0.25 (f 2))
+        x2 = Translate (-150) (-240) (scale 0.25 0.25 (f 8))
+        x3 = Translate (150) (-240) (scale 0.25 0.25 (f 9))
+        x4 = Translate (450) (-240) (scale 0.25 0.25 (f 10))
+        f x | p==x = xx'
+            | otherwise = x'
+        -- | Imagens dos modos a cores
+        lxx = listaEntres 30 33 li 
+        [pp1,pp2,pp3,pp4] = lxx
+        pp1' = Translate (-450) (0) pp1
+        pp2' = Translate (-150) (0) pp2
+        pp3' = Translate (150) (0) pp3
+        pp4' = Translate (450) (0) pp4
+        -- | Imagens dos modos menus
+        lm =listaEntres 34 35 li 
+        [m,m1]=lm
+        m1' = Translate (695) (-430) (scale 0.7 0.7 m)
+        m' = Translate (480) (-360) (scale 0.7 0.7 m1)
+
+-- | Funcao que desenha o nosso menu pausa
+pausa::Pictures->Picture
+pausa li = Pictures [x1,x2]
+     where
+        lx = listaEntres 28 29 li 
+        [cc,ex] = lx
+        x1 = Translate (0) (00) (scale 0.5 0.5 (cc))
+        x2 = Translate (0) (-200) (scale 0.5 0.5 (ex))
+        
+
+-- | Funcao que movimenta o mapa ao longo do decorrer do jogo
+movimentaMapa::Picture->[Jogador]->Int->Picture
+movimentaMapa l [] _ = l 
+
+movimentaMapa l ((Jogador o d _ _ _):r) 3 =Translate m n l 
+                               where                    
+                                 m = (-(fromIntegral (truncate d))*comp/1.5)+linha+150+2
+                                 n=0
+movimentaMapa l lj _ = Translate m n l 
+            where 
+              (Jogador o d _ _ _) = j 
+              j = primeiroJ lj
+            --  m = (-(fromIntegral (truncate d))*comp/1.5)+linha+150+2
+              m = (-(fromIntegral (truncate d))*comp/1.5)+linha+150+2
+              n = 0                                   
+
+
+-- | Desenha o mapa com os jogadores              
+geraMapaJogadores'::Mapa->Float->Float->[Jogador]->Int->Int->Pictures->Pictures
+geraMapaJogadores' [] _ _ _ _ _ _= []
+geraMapaJogadores' (a:b) x y lj npista nPeca li = (geraMapaJogadores' b (x+p) (y+p') lj (npista+1) (nPeca) li) ++ (umaPistaEJogadores a x y lj' nPeca li)
+                where 
+                  lj' = buscarJ lj npista 0
+
+-- | desenha uma pista com os jogadores dessa pista                           
+umaPistaEJogadores::Pista->Float->Float->[(Jogador,Int)]->Int->Pictures->Pictures
+umaPistaEJogadores pista x y lj nPeca li | (length lj)>0 =  (umaPista' pista x y lj nPeca li) ++ [(desenharJs' x y pista lj li)]
+                                         | otherwise = (umaPista' pista x y lj nPeca li)
+
+
+-- | Funcao que desenha uma pista
+umaPista'::Pista->Float->Float->[(Jogador,Int)]->Int->Pictures->Pictures
+umaPista' [] _ _ _ _ _= []
+umaPista' (a:b) x y lj nPeca li = (umaPeca' a x y lj' li) ++ (umaPista' b (x+comp) y lj (nPeca+1) li)
+              where
+                lj'= naPecaj lj nPeca 
+                
+-- | Funcao que desenha uma Recta                         
+umaPeca'::Peca->Float->Float->[(Jogador,Int)]->Pictures->Pictures    
+umaPeca' (Recta piso h) x y lj li = [m,m',l]
+          where 
+            m = (color f' ( Polygon [(x,y),(x,y+lp),(comp+x,lp+y),(x+comp,y)]))
+            m' = Translate p p' m
+            l =color f (Polygon [(x,lp+y),(p+x,y+lp+p'),(x+comp+p,y+lp+p'),(x+comp,y+lp)])
+            lp = ((fromIntegral h)*comp)
+            
+            boost'' = color red (Polygon [(x+(comp/4),y),(x+(comp/4)+p,y+p'),(x+(comp/2)+(p/4),((y+p')/2))]) 
+            boost' = translate (-(comp/4)) ((fromIntegral h)*comp) boost''
+
+            f = dim (bright a)
+            a | piso==Relva = makeColorI 92 647 51 300
+              | piso==Terra = makeColorI 92 51 23 300
+              | piso==Lama = makeColorI 184 134 11 300
+              | piso==Boost = makeColorI 0 200 200 300
+              | piso==Cola = red
+                --makeColorI 217 135 25 300
+            --poe cor nas paredes
+            f' = dark f
+
+-- | Funcao que desenha uma Rampa
+umaPeca' (Rampa piso hi' hf') x y lj li = [parede',base,parede] 
+      where
+            parede= color f'  (Polygon [(x,y),(x,y+comp*hi),(x+comp,y+comp*hf),(x+comp,y)])
+            parede' = Translate p p' parede
+            base = color f (Polygon [(x,y+comp*hi),(x+p,y+comp*hi+p'),(x+p+comp,y+comp*hf+p'),(x+comp,hf*comp+y)])
+            hf = fromIntegral hf'
+            hi = fromIntegral hi'
+            dif' = hf'-hi' 
+            h' = altura (Rampa piso hi' hf') (distanciaJ j)
+            (j,num):r = lj
+         
+            f = dim (bright a)
+            a | piso==Relva = makeColorI 92 647 51 300
+              | piso==Terra = makeColorI 92 51 23 300
+              | piso==Lama = makeColorI 184 134 11 300
+              | piso==Boost = makeColorI 0 200 200 300
+              | piso==Cola =  red
+                --makeColorI 217 135 25 300      
+            f' = dark f
+
+-- | Funcao que desenha os Jogadores
+desenharJs'::Float->Float->Pista->[(Jogador,Int)]->Pictures->Picture
+desenharJs' x y pista [(j,n)] li = Pictures [umJ x y h (j,n) li peca]
+  where
+    h | (length pista)>((truncate (distanciaJ j))) = verii (estadoJogador j)
+      | otherwise = verii' (estadoJogador j)
+
+    verii (Ar e _ _ ) =  realToFrac e
+    verii _ = realToFrac (altura peca (distanciaJ j) )
+
+    verii' _ | auxx peca == 0 = lol peca
+             | auxx peca == 1 = lol peca
+               where
+                 auxx (Recta _ _) = 0
+                 auxx (Rampa _ _ _) = 1
+                 lol (Recta _ t) = realToFrac t
+                 lol (Rampa _ _ tf) = realToFrac tf
+
+    peca | (length pista)>((truncate (distanciaJ j))) = encontraIndiceLista (truncate (distanciaJ j)) pista
+         | otherwise = encontraIndiceLista ((truncate (distanciaJ j))-1) pista 
+
+desenharJs' x y pista ((j,p'):b) li = Pictures ([(desenharJs' x y pista b li)] ++ [(umJ x y h (j,p') li peca)])
+    where
+      h | (length pista)>((truncate (distanciaJ j))) = verii (estadoJogador j)
+        | otherwise = verii' (estadoJogador j)
+
+      verii (Ar e _ _ ) =  realToFrac e
+      verii _ = realToFrac (altura peca (distanciaJ j) )
+
+      verii' _ | auxx peca == 0 = lol peca
+               | auxx peca == 1 = lol peca
+               where
+                 auxx (Recta _ _) = 0
+                 auxx (Rampa _ _ _) = 1
+                 lol (Recta _ t) = realToFrac t
+                 lol (Rampa _ _ tf) = realToFrac tf
+
+      peca | (length pista)>((truncate (distanciaJ j))) = encontraIndiceLista (truncate (distanciaJ j)) pista
+           | otherwise = encontraIndiceLista ((truncate (distanciaJ j))-1) pista   
+      
+
+-- | Funcao que desenha um Jogador
+umJ::Float->Float->Float->(Jogador,Int)->Pictures->Peca->Picture
+umJ x y h (j,num) li peca= (Translate x' y' j')
+        where 
+              x' = x + (realToFrac (distanciaJ j))*comp
+          --    x' = x + (realToFrac ((distanciaJ j) - (fromIntegral (truncate (distanciaJ j)))))*comp
+              y' =  y -150 + ((realToFrac h)*(realToFrac comp)) + 200
+              j' = rotate i ( scale 0.3 0.3 (desenhaJogador' j li num))
+              i = realToFrac (incliJ' j peca)
+
+-- | Funcao que atribui a cada jogador a sua determinada imagem
+desenhaJogador'::Jogador->Pictures->Int->Picture
+desenhaJogador' j@(Jogador xj yj _ _ (Morto _)) [j1,j1m,j2,j2m,j3,j3m,j4,j4m] num | num == 0 =  j4m
+                                                                                  | num == 1 =  j2m 
+                                                                                  | num == 2 =  j1m 
+                                                                                  | num == 3 =  j3m                                                                   
+                                                                          
+desenhaJogador' j@(Jogador xj yj _ _ w) [j1,j1m,j2,j2m,j3,j3m,j4,j4m] num | num == 0 =  j4 
+                                                                          | num == 1 =  j2
+                                                                          | num == 2 =  j1 
+                                                                          | num == 3 =  j3 
+--desenhaJogador' _ _ _  = []
+
+-- | Funcao que desenha a tabela de classificacoes
+tabelaClassificacao::[Jogador]->Pictures->Int->Pictures
+tabelaClassificacao lj li num = tabela' ++ linhas ++ classificacaoJs lj' num iJ iT
+      where 
+        lj' = posicoesJ lj lj
+        -- imagend dos jogadores
+        iJ = listaEntres 2 9 li
+        -- imagem dos trofeus
+        iT = listaEntres 18 21 li
+        [t1,t2,t3,t4] = iT
+
+        trofeu = (scale 1 1 (li !! 16) )
+
+        tabela' = [color f tabela]
+        tabela = (Polygon [(x,y),(x,y'),(x',y'),(x',y) ])
+        linhas = linhaC ++ linhaC1 ++ linhaC2 ++ linhaC3 ++ linhaL1 ++ linhaL2 ++ linhaL3
+        linhaC = [color black  (Line [(x,y),(x,y'),(x',y'),(x',y),(x,y) ]) ]
+        linhaC1 = [color black  (Line [(x,y+39),(x',y+39)]) ]
+        linhaC2 = [color black  (Line [(x,y+39*2+4),(x',y+39*2+4)]) ]
+        linhaC3 = [color black  (Line [(x,y+39*3+6),(x',6+y+39*3)]) ]
+        linhaL1 = [color black  (Line [(x+100,y),(x+100,y')]) ]
+        linhaL2 = [color black  (Line [(x+270,y),(x+270,y')]) ]
+        linhaL3 = [color black  (Line [(x+435+43,y),(x+435+43,y')]) ]
+        f = makeColorI 0 255 255 300
+        x = linha - 200
+        y = coluna - 170
+        x' = linha + 300 + 27
+        y' = y + 163 
+
+
+-- | Funcao que desenha  os jogadores na tabela de calssifucacao em funcao da posicao em que se encontram
+classificacaoJs::[(Jogador,Int)]->Int->Pictures->Pictures->Pictures
+classificacaoJs [] _ _ _ = []
+classificacaoJs ((j,p):r) num  lj lt = [(classificacaoJ (j,p) num lj lt)] ++ e
+             where e =(classificacaoJs r (num+1) lj lt)
+                  
+-- | Funcao que adiciona todas as informacoes acerca de um jogador na tabela de classificaoes
+classificacaoJ::(Jogador,Int)->Int->Pictures->Pictures->Picture
+classificacaoJ (j,p) num  lj lt = Pictures ([imagemJ,trofeu,texto'] ++ poemCola)
+  where
+    
+    imagemJ = Translate x y (scale 0.15 0.15 (desenhaJogador' j lj num))
+    x = linha - 150
+    y = coluna - 25 + ((realToFrac p)-4)*((realToFrac comp)/1.8)
+    
+    [t1,t2,t3,t4]=lt
+    trofeu = Translate x' (y-0.5) (scale 0.08 0.071 (numTrofeu))
+    x' = linha + 268 + 34
+
+    numTrofeu | p == 1 = t4
+              | p == 2 = t3 
+              | p == 3 = t2
+              | otherwise = t1
+
+    texto' = Translate (x+65) (y-10) texto
+    texto = scale 0.2 0.2 (text ("PLAYER "++ show (num+1)))
+  
+    circle = color red (ThickCircle 6 13)
+    c1 = (Translate (x+250) y circle)
+    c2 = (Translate (x+300) y circle)
+    c3 = (Translate (x+350) y circle)
+    c4 = (Translate (x+400) y circle)
+    
+    poemCola | (colaJogador j) == 0 = []
+             | (colaJogador j) == 1 = [c1]
+             | (colaJogador j) == 2 = [c1,c2]
+             | (colaJogador j) == 3 = [c1,c2,c3] 
+             | otherwise = [c1,c2,c3,c4] 
+
+-- | Funcao auxiliar necessaria para a utilizacao dos bots
+jogada'::Int->[Jogada]->Estado->Estado
+jogada' _ [] e = e
+jogada' a [j] e = jogada a j e

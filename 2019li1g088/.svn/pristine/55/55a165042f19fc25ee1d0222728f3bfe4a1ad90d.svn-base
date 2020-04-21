@@ -1,0 +1,246 @@
+-- | Este módulo define funções comuns da Tarefa 5 do trabalho prático.
+module Main where
+
+import LI11920
+import Tarefa4_2019li1g088
+import Tarefa3_2019li1g088
+import Tarefa2_2019li1g088
+import Tarefa1_2019li1g088
+import Tarefa0_2019li1g088
+import Graphics.Gloss
+import Graphics.Gloss.Juicy
+import Graphics.Gloss.Interface.Pure.Game
+--import Data.Matrix
+import Graphics.Gloss.Interface.IO.Animate
+--import GeraMapa.hs
+--import Graphics.Gloss.Interface.Pure.Game.Polygon
+
+
+-- * Tipos de dados auxiliares
+type Pictures = [Picture]
+type EstadoGloss =(Estado,Pictures)
+
+estadoGlossInicial::Pictures->EstadoGloss
+estadoGlossInicial li = (estadoTeste,li)
+
+-- | Display full screen
+ecra::Display
+ecra = FullScreen
+
+-- | frame
+frame::Int
+frame = 60 --- modificar valor-- talvez 60?!
+
+--x inicial
+linha::Float
+linha = (-500)
+
+--y inicial
+coluna::Float
+coluna = (-700) --defenir melhor
+-- -200 carro
+
+espaco::Float
+espaco = 20 -- defenir depois
+
+estadoTeste::Estado
+estadoTeste = (Estado (gera 4 40 0) [(Jogador 2 10.9 0 3 (Chao True)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False))])
+
+
+reageAoTempo::Float->EstadoGloss->EstadoGloss
+reageAoTempo t ((Estado mapa ((Jogador a b c d (Morto e)):r)),li) = ((Estado mapa ((Jogador a (b) c d (Morto e)):r)),li)
+reageAoTempo t ((Estado mapa ((Jogador a b c d l@(Chao False)):r)),li) = ((Estado mapa ((Jogador a (b) c d l):r)),li)
+reageAoTempo t ((Estado mapa ((Jogador a b c d l@(Chao True)):r)),li) = ((Estado mapa ((Jogador a (b-1) c d l):r)),li)
+reageAoTempo t ((Estado mapa ((Jogador a b c d l@(Ar _ _ _)):r)),li) = ((Estado mapa ((Jogador a (b-1) c d l):r)),li)
+
+reageAoMOvimento::Event->EstadoGloss->EstadoGloss
+-- | Teclas do joagdor 1
+--reageAoMOvimento _ e = e
+reageAoMOvimento (EventKey (Char '1') Down _ _) (a,li) = (jogada 0 Desacelera a,li)
+reageAoMOvimento (EventKey (Char '2') Down _ _) (a,li) = (jogada 0 Acelera a,li)
+reageAoMOvimento (EventKey (Char 'w') Down _ _) (a,li) = (jogada 0 (Movimenta C) a,li)
+reageAoMOvimento (EventKey (Char 's') Down _ _) (a,li) = (jogada 0 (Movimenta B) a,li)
+reageAoMOvimento (EventKey (Char 'a') Down _ _) (a,li) = (jogada 0 (Movimenta E) a,li)
+reageAoMOvimento (EventKey (Char 'd') Down _ _) (a,li) = (jogada 0 (Movimenta D) a,li)      
+reageAoMOvimento (EventKey (Char '3') Down _ _) (a,li) = (jogada 0 Dispara a,li)       
+reageAoMOvimento _ q=q
+  --  where 
+        -- updateLinha 4 (Translate 50 0) li
+desenhaGLossInicial::EstadoGloss->Picture
+desenhaGLossInicial e@((Estado mapa j),li) = Pictures ([(desenhaMapa e )] ++ (desenhaJogadores j lj 0))
+         where lj = listaEntres 2 9 li
+  --jogar e 
+
+  
+  --desenhaMenu ((Estado mapa j),li)
+   ---jogar ((Estado mapa j),li)
+desenhaMapa::EstadoGloss->Picture
+desenhaMapa ((Estado mapa j),li) = Pictures [fundo',ceu,(movimentaMapa mapa' j)]
+                        where
+                          mapa' = scale 0.4 0.4 mapa''
+                          mapa'' = Pictures (geraMapa mapa linha coluna)
+                          fundo' = (scale 1.5 1.7 ((translate (0) (0) (li !! 0))))
+                          ceu = (scale 1.5 1.3 (translate (0) (150) (li !! 1)))
+
+movimentaMapa::Picture->[Jogador]->Picture
+movimentaMapa l [] = l 
+movimentaMapa l ((Jogador o d _ _ _):r) =Translate m n l 
+                               where
+                                 m = (fromIntegral (truncate d))+linha+150
+                                 n=0
+movimentaMapa l _ = l
+                              
+
+
+menuInical::Event->EstadoGloss->Picture
+menuInical (EventKey (Char 'w') Down _ _) e = undefined
+menuInical _ e = desenhaMenu e
+
+desenhaMenu::EstadoGloss->Picture
+desenhaMenu (e,li) = Pictures [jipe,start]
+                where 
+                  li' = listaEntres 10 13 li 
+                  [f1,f2,st,j] = li'
+                  start = (scale 1 1 (translate (0) (-90) st))
+                  jipe = (scale 1 1 (translate (-300) (100) j))
+
+
+--colocaJogadores::EstadoGloss->Picture
+--colocaJogadores ((Estado mapa j),li) = 
+  
+  --Pictures [j2,j3,j1,j4]
+    --                         where 
+      --                        jogadores = listaEntres 2 9 li
+        --                      j1 = (scale 0.35 0.35 (translate (-800) (-490) (li !! 2)))
+          --                    j3 = (scale 0.35 0.35 (translate (-800) (-290) (li !! 6)))
+            --                  j2 = (scale 0.35 0.35 (translate (-800) (-120) (li !! 8)))
+              --                j4 = (scale 0.35 0.35 (translate (-200) (-290) (li !! 9)))
+                --              f1 = (scale 1 1 (translate (0) (150) (li !! 10)))
+                  --            f2 = (scale 1.5 4 (translate (0) (-200) (li !! 11)))
+
+
+-- | Função principal da Tarefa 5.
+--
+-- __NB:__ Esta Tarefa é completamente livre. Deve utilizar a biblioteca <http://hackage.haskell.org/package/gloss gloss> para animar o jogo, e reutilizar __de forma completa__ as funções das tarefas anteriores.
+main :: IO ()
+main = do 
+     fundo <- loadBMP "IMAGENS/fundo.bmp"
+     ceu <- loadBMP "IMAGENS/ceu.bmp"
+     j1 <- loadBMP "IMAGENS/jipeAzul.bmp"
+     j1m <- loadBMP "IMAGENS/jipeAzulM.bmp"
+     j2 <- loadBMP "IMAGENS/jipeRosa.bmp"
+     j2m <- loadBMP "IMAGENS/jipeRosaM.bmp"
+     j3 <- loadBMP "IMAGENS/jipeVerde.bmp"
+     j3m <- loadBMP "IMAGENS/jipeVerdeM.bmp"
+     j4 <- loadBMP "IMAGENS/jipeVermelho.bmp"
+     j4m <- loadBMP "IMAGENS/jipeVermelhoM.bmp"
+     f1 <- loadBMP "IMAGENS/galaxia.bmp"
+     f2 <- loadBMP "IMAGENS/chao.bmp"
+     st <- loadBMP "IMAGENS/star.bmp"
+     j <- loadBMP "IMAGENS/jipei.bmp"
+     play ecra                              -- minha janela do jogo
+         white                            -- cor do fundo do ecra
+         frame                              -- frame rate
+         (estadoGlossInicial [fundo,ceu,j1,j1m,j2,j2m,j3,j3m,j4,j4m,f1,f2,st,j])             --estado inicial
+         desenhaGLossInicial
+         reageAoMOvimento                   --reage ao movimento
+         reageAoTempo                       -- reage ao tempo
+--display ecra white aaaa
+--(Pictures [m',m,l])
+
+comp::Float
+comp=200
+--vetor translate do gera mapa
+p::Float
+p=0
+p'::Float
+p'=170
+
+--
+desenhaJogadores::[Jogador]->Pictures->Int->Pictures
+--desenhaJogadores [] _ _ = error
+desenhaJogadores [] _ _ = []
+desenhaJogadores [a] li num = desenhaJogador a li num
+desenhaJogadores (a:b) li num = (desenhaJogadores b li (num+1)) ++ (desenhaJogador a li num)
+
+desenhaJogador::Jogador->Pictures->Int->Pictures
+desenhaJogador (Jogador xj yj _ _ (Morto _)) [j1,j1m,j2,j2m,j3,j3m,j4,j4m] num | num == 0 = colocaJogador [j1m] xj yj
+                                                                               | num == 1 = colocaJogador [j2m] xj yj
+                                                                               | num == 2 = colocaJogador [j3m] xj yj
+                                                                               | num == 3 = colocaJogador [j4m] xj yj
+desenhaJogador (Jogador xj yj _ _ (Chao _)) [j1,j1m,j2,j2m,j3,j3m,j4,j4m] num | num == 0 =colocaJogador [j1m] xj yj
+                                                                              | num == 1 = colocaJogador [j2m] xj yj
+                                                                              | num == 2 = colocaJogador [j3m] xj yj
+                                                                              | num == 3 = colocaJogador [j4m] xj yj
+desenhaJogador (Jogador xj yj _ _ (Ar h i _)) [j1,j1m,j2,j2m,j3,j3m,j4,j4m] num | num == 0 =colocaJogador [j1m] xj yj
+                                                                                | num == 1 = colocaJogador [j2m] xj yj
+                                                                                | num == 2 = colocaJogador [j3m] xj yj
+                                                                                | num == 3 = colocaJogador [j4m] xj yj
+desenhaJogador _ _ _ = []
+
+colocaJogador::[Picture]->Int->Double->[Picture]
+colocaJogador [] _ _ = []
+colocaJogador [j] m n = [Translate m' n' j']
+    where --m' = n*comp + linha + p
+          m' = 0
+          n' = (fromIntegral m)*p' + coluna
+          j' = scale 0.35 0.35 j
+
+
+--verificaOpacidade
+opacidade = withAlpha
+verificaOpacidade::Pictures->Double->Double->Pictures
+verificaOpacidade = undefined
+
+
+
+geraMapa::Mapa->Float->Float->Pictures
+geraMapa [] _ _ = []
+geraMapa (a:b) x y =  (geraMapa b (x+p) (y+p')) ++ (umaPista a x y)
+
+umaPista::Pista->Float->Float->Pictures
+umaPista [] _ _ = []
+umaPista (a:b) x y = (umaPeca a x y) ++ umaPista b (x+comp) y
+
+umaPeca::Peca->Float->Float->Pictures
+umaPeca (Recta piso h) x y = [m,m',l]
+          where 
+            m = (color f' ( Polygon [(x,y),(x,y+lp),(comp+x,lp+y),(x+comp,y)]))
+            m' = Translate p p' m
+            l =color f (Polygon [(x,lp+y),(p+x,y+lp+p'),(x+comp+p,y+lp+p'),(x+comp,y+lp)])
+            lp = ((fromIntegral h)*comp)
+            
+            boost'' = color red (Polygon [(x+(comp/4),y),(x+(comp/4)+p,y+p'),(x+(comp/2)+(p/4),((y+p')/2))]) 
+            boost' = translate (-(comp/4)) ((fromIntegral h)*comp) boost''
+
+            f = dim (bright a)
+            a | piso==Relva = makeColorI 92 647 51 300
+              | piso==Terra = makeColorI 92 51 23 300
+              | piso==Lama = makeColorI 184 134 11 300
+              | piso==Boost = makeColorI 0 200 200 300
+              | piso==Cola = red
+                --makeColorI 217 135 25 300
+            --poe cor nas paredes
+            f' = dark f
+
+umaPeca (Rampa piso hi' hf') x y = [parede',base,parede]
+      where
+            parede= color f'  (Polygon [(x,y),(x,y+comp*hi),(x+comp,y+comp*hf),(x+comp,y)])
+            parede' = Translate p p' parede
+            base = color f (Polygon [(x,y+comp*hi),(x+p,y+comp*hi+p'),(x+p+comp,y+comp*hf+p'),(x+comp,hf*comp+y)])
+            hf = fromIntegral hf'
+            hi = fromIntegral hi'
+            dif' = hf'-hi' 
+         
+            f = dim (bright a)
+            a | piso==Relva = makeColorI 92 647 51 300
+              | piso==Terra = makeColorI 92 51 23 300
+              | piso==Lama = makeColorI 184 134 11 300
+              | piso==Boost = makeColorI 0 200 200 300
+              | piso==Cola =  red
+                --makeColorI 217 135 25 300
+           
+            f' = dark f
+ 
+      
+            

@@ -1,0 +1,170 @@
+-- | Este módulo define funções comuns da Tarefa 5 do trabalho prático.
+module Main where
+
+import LI11920
+import Tarefa4_2019li1g088
+import Tarefa3_2019li1g088
+import Tarefa2_2019li1g088
+import Tarefa1_2019li1g088
+import Tarefa0_2019li1g088
+import Graphics.Gloss
+--import Graphics.Gloss.Juicy
+import Graphics.Gloss.Interface.Pure.Game
+--import Data.Matrix
+import Graphics.Gloss.Interface.IO.Animate
+--import Graphics.Gloss.Interface.Pure.Game.Polygon
+
+
+-- * Tipos de dados auxiliares
+type Pictures = [Picture]
+type EstadoGloss = (Float,Float,Pictures)
+
+estadoGlossInicial::Pictures->EstadoGloss
+estadoGlossInicial l1 = (0,0,l1)
+
+-- | Display full screen
+ecra::Display
+ecra = FullScreen
+
+-- | frame
+frame::Int
+frame = 20 --- modificar valor-- talvez 60?!
+
+--x inicial
+linha::Float
+linha = 20 ---defenir depois valor
+
+--y inicial
+coluna::Float
+coluna = 300 --defenir melhor
+
+espaco::Float
+espaco = 20 -- defenir depois
+
+--retangulo::Polygon
+--retangulo = Polygon (retangle)
+
+{--
+desenharMapa::Estado->Pictures->Pictures
+desenharMapa (Estado m j) li = defenirMapa m linha coluna li
+
+defenirMapa::Mapa->Float->Float->Pictures->Pictures
+defenirMapa [] _ _ _ = []
+defenirMapa (a:b) x y li = (defenirLinha a x y li) ++ defenirMapa b x (y-espaco)
+
+defenirLinha:: [Peca]->Float->Float->Pictures->Pictures
+defenirLinha [] _ _ _ = []
+defenirLinha (m:n) x y li = (desenharPeca m x y li):(defenirLinha n (x+l) y li)
+
+desenharPeca::Peca->Float->Float->Pictures->Pictures
+desenharPeca = undefined
+--}
+
+
+reageAoTempo::Float->EstadoGloss->EstadoGloss
+reageAoTempo t (x,y,li) = (x,y,li)
+
+reageAoMOvimento::Event->EstadoGloss->EstadoGloss
+-- | Teclas do joagdor 2
+reageAoMOvimento (EventKey (Char 'w') Down _ _) (x,y,li) = (x,y+80,li)
+reageAoMOvimento (EventKey (Char 's') Down _ _) (x,y,li) = (x,y-80,li)
+reageAoMOvimento (EventKey (Char 'd') Down _ _) (x,y,li) = (x+100,y,li)
+reageAoMOvimento (EventKey (Char 'a') Down _ _) (x,y,li) = (x-100,y,li)
+reageAoMOvimento _ q=q
+
+desenhaMapa::EstadoGloss->Picture
+desenhaMapa (x,y,li) = Pictures[m]
+                    where m = Translate x y (head li)
+--a::Picture
+--a= Rectangle (100,100)
+--b::Picture
+--b = Translate (-300) (-300) a
+
+m = Polygon [(0,0),(0,50),(50,50),(50,0)]
+m' = Translate 25 25 m
+l =color red (Polygon [(0,50),(25,75),(75,75),(50,50)])
+
+aaaa= (Pictures (geraMapa (gera 3 20 1) (-200) (-200)) )
+-- | Função principal da Tarefa 5.
+--
+-- __NB:__ Esta Tarefa é completamente livre. Deve utilizar a biblioteca <http://hackage.haskell.org/package/gloss gloss> para animar o jogo, e reutilizar __de forma completa__ as funções das tarefas anteriores.
+main :: IO ()
+main = display ecra blue aaaa
+--(Pictures [m',m,l])
+    {-do
+    m <- loadBMP "Imagens/aa.bmp"
+    play ecra                              -- minha janela do jogo
+        black                              -- cor do fundo do ecra
+        frame                              -- frame rate
+        (estadoGlossInicial [m])             --estado inicial
+        desenhaMapa
+        reageAoMOvimento                   --reage ao movimento
+        reageAoTempo                       -- reage ao tempo
+
+
+-}
+comp::Float
+comp=100
+--vetor translate
+p::Float
+p=0
+p'::Float
+p'=30
+
+geraMapa::Mapa->Float->Float->[Picture]
+geraMapa [] _ _ = []
+geraMapa (a:b) x y =  (geraMapa b (x+p) (y+p')) ++ (umaPista a x y)
+
+umaPista::Pista->Float->Float->[Picture]
+umaPista [] _ _ = []
+umaPista (a:b) x y = (umaPeca a x y) ++ umaPista b (x+comp) y
+
+umaPeca::Peca->Float->Float->[Picture]
+umaPeca (Recta piso h) x y = [m,m',l]
+          where 
+            m = color f' ( Polygon [(x,y),(x,y+lp),(comp+x,lp+y),(x+comp,y)])
+            m' = Translate p p' m
+            l =color f (Polygon [(x,lp+y),(p+x,y+lp+p'),(x+comp+p,y+lp+p'),(x+comp,y+lp)])
+            lp = ((fromIntegral h)*comp)
+            f | piso==Relva = makeColor 0.6 0.7 0.1 1
+              | piso==Terra = makeColor 0.15 0.2 0.1 1
+              | piso==Lama = makeColor 0.59 0.3 0.1 1
+              | piso==Boost = makeColor 0.85 0.2 0 1
+              | piso==Cola = makeColor 0.9 0.5 0.2 1
+
+            f' | piso==Relva = makeColor 0.34 0.4 0.05 1
+               | piso==Terra = makeColor 0.05 0.1 0.1 1
+               | piso==Lama = makeColor 0.38 0.3 0.1 1
+               | piso==Boost = makeColor 0.7 0.05 0 1
+               | piso==Cola = makeColor 0.9 0.4 0.05 1
+
+umaPeca (Rampa piso hi hf) x y | dif'>0 = [m',l,m]
+                               | otherwise = [m2',m2,l2]
+             where 
+              dif' = hf-hi 
+              dif = abs dif' 
+              lp = y+((fromIntegral dif)*comp)
+              l = color f (Polygon [(x,y),(x+p,p'+y),(x+p+comp,lp+p'),(x+comp,lp)])
+              m = color f' (Polygon [(x,y),(x+comp,lp),(x+comp,y)])
+              m' = color f' (Polygon [(x+comp,y),(x+comp,lp),(x+p+comp,lp+p'),(x+p+comp,y+p')])
+
+              l2 = color f (Polygon [(x,lp),(x+p,p'+lp),(x+p+comp,y+p'),(x+comp,y)])
+              m2 = color f' (Polygon [(x,y),(x,lp),(x+comp,y)])
+              m2' = translate p p' m2
+
+
+              f | piso==Relva = makeColor 0.6 0.7 0.1 1
+                | piso==Terra = makeColor 0.15 0.2 0.1 1
+                | piso==Lama = makeColor 0.59 0.3 0.1 1
+                | piso==Boost = makeColor 0.85 0.2 0 1
+                | piso==Cola = makeColor 0.9 0.5 0.2 1
+  
+              f' | piso==Relva = makeColor 0.34 0.4 0.05 1
+                 | piso==Terra = makeColor 0.05 0.1 0.1 1
+                 | piso==Lama = makeColor 0.38 0.3 0.1 1
+                 | piso==Boost = makeColor 0.7 0.05 0 1
+                 | piso==Cola = makeColor 0.9 0.4 0.05 1
+             
+             
+    --        x = fromIntegral x'
+  --  y = fromIntegral y'

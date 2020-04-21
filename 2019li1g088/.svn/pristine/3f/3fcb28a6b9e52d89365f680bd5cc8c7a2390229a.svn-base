@@ -1,0 +1,451 @@
+--- | Este módulo define funções genéricas sobre vetores e matrizes, que serão úteis na resolução do trabalho prático.
+module Tarefa0_2019li1g088 where
+
+    import LI11920
+    import Tarefa1_2019li1g088
+  
+    -- * Funções não-recursivas.
+    
+    -- | Um ponto a duas dimensões dado num referencial cartesiado (distâncias aos eixos vertical e horizontal)
+    --
+    -- <<http://li1.lsd.di.uminho.pt/images/cartesiano.png cartesisano>>
+    -- , ou num referencial polar (distância à origem e ângulo do respectivo vector com o eixo horizontal).
+    --
+    -- <<http://li1.lsd.di.uminho.pt/imazges/polar.png polar>>
+    data Ponto = Cartesiano Double Double | Polar Double Angulo deriving (Show , Eq)
+    
+    -- | Converte um 'Angulo' para graus.
+    toRad :: Angulo -> Double
+    toRad a = (a*pi)/180
+    
+    -- | Converte um 'Vetor' para Cartesiano. 
+    toCartesiano :: Vetor -> Vetor
+    toCartesiano (Cartesiano a b) = (Cartesiano a b) 
+    toCartesiano (Polar r a) = (Cartesiano c d)
+                            where 
+                                c = r*(cos (toRad a))
+                                d = r*(sin (toRad a))
+
+    -- | Converte um 'Vetor' para polar. 
+    toPolar :: Vetor -> Vetor
+    toPolar (Cartesiano c d) | (c==0 && d==0) = (Polar 0 0)
+                             | otherwise = (Polar r a)
+                               where
+                                  r = sqrt (c^2 + d^2)
+                                  a = atan (d/c)  
+                                 
+    
+    -- | Calcúla a distância do 'Ponto' ao eixo vertical.
+    
+    posx :: Ponto -> Double
+    posx (Cartesiano a _) = a
+    posx (Polar q w) = posx (toCartesiano (Polar q w))
+                           
+                                
+    -- Calcúla a distância do 'Ponto' ao eixo horizontal.
+                                
+    posy :: Ponto -> Double
+    posy (Cartesiano _ b) = b
+    posy (Polar q w) = posy (toCartesiano (Polar q w))
+    
+    -- | Um ângulo em graus.
+    type Angulo = Double
+    
+    -- ** Funções sobre vetores.
+    
+    -- | Um 'Vetor' na representação escalar é um 'Ponto' em relação à origem.
+    type Vetor = Ponto
+    -- ^ <<http://li1.lsd.di.uminho.pt/images/vetor.png vetor>>
+    
+    -- *** Funções gerais sobre 'Vetor'es.
+    
+    -- | Soma dois 'Vetor'es.
+    somaVetores :: Vetor -> Vetor -> Vetor
+    somaVetores p1 p2 = (Cartesiano x y)
+                      where
+                         x1 = posx p1
+                         x2 = posx p2
+                         x = x1 + x2
+                         y1 = posy p1
+                         y2 = posy p2
+                         y = y1 + y2
+    
+                                                
+    -- | Subtrai dois 'Vetor'es.
+    subtraiVetores :: Vetor -> Vetor -> Vetor
+    subtraiVetores p1 p2 = (Cartesiano x y)
+                      where
+                         x1 = posx p1
+                         x2 = posx p2
+                         x = x1 - x2
+                         y1 = posy p1
+                         y2 = posy p2
+                         y = y1 - y2
+    
+    
+    
+    -- | Multiplica um escalar por um 'Vetor'.
+    multiplicaVetor :: Double -> Vetor -> Vetor
+    multiplicaVetor m l = (Cartesiano o p)
+                                       where
+                                            (Cartesiano x y) = toCartesiano l 
+                                            o = x*m
+                                            p = m*y
+    
+    
+    -- ** Funções sobre rectas.
+    
+    -- | Um segmento de reta é definido por dois pontos.
+    type Reta = (Ponto,Ponto)
+    
+    -- | Testar se dois segmentos de reta se intersetam.
+    --
+    -- __NB:__ Aplique as equações matemáticas bem conhecidas, como explicado por exemplo em <http://www.cs.swan.ac.uk/~cssimon/line_intersection.html>.
+    intersetam :: Reta -> Reta -> Bool
+    intersetam (p1,p2) (p3,p4) = ( ((ta<=1 && ta>=0) && (tb<=1 && tb>=0)) || ( ((a1==a3)||(a1==a4)) && ((a2==a3)||(a2==a4) ) ))        
+              where
+                  a1 = toCartesiano p1
+                  a2 = toCartesiano p2
+                  a3 = toCartesiano p3
+                  a4 = toCartesiano p4
+                  x1 = posx p1
+                  y1 = posy p1
+                  x2 = posx p2
+                  y2 = posy p2
+                  x3 = posx p3
+                  y3 = posy p3
+                  x4 = posx p4
+                  y4 = posy p4
+                  ta = (((y3 - y4)*(x1 - x3)) + ((x4 - x3)*(y1 -y3))) / (((x4 - x3)*(y1 -y2)) - ((x1 - x2)*(y4 - y3)))
+                  tb = (((y1 - y2)*(x1 - x3)) + ((x2 - x1)*(y1 -y3))) / (((x4 - x3)*(y1 -y2)) - ((x1 - x2)*(y4 - y3)))
+                         
+    
+    
+    -- | Calcular o ponto de intersecao entre dois segmentos de reta.
+    --
+    -- __NB:__ Aplique as equações matemáticas bem conhecidas, como explicado por exemplo em <http://www.cs.swan.ac.uk/~cssimon/line_intersection.html>.
+    intersecao :: Reta -> Reta -> Ponto
+    intersecao (p1,p2) (p3,p4) = (Cartesiano m n)
+            where
+                a1 = toCartesiano p1
+                a2 = toCartesiano p2
+                a3 = toCartesiano p3
+                a4 = toCartesiano p4
+                x1 = posx p1
+                y1 = posy p1
+                x2 = posx p2
+                y2 = posy p2
+                x3 = posx p3
+                y3 = posy p3
+                x4 = posx p4
+                y4 = posy p4
+                ta = (((y3 - y4)*(x1 - x3)) + ((x4 - x3)*(y1 -y3))) / (((x4 - x3)*(y1 -y2)) - ((x1 - x2)*(y4 - y3)))
+                tb = (((y1 - y2)*(x1 - x3)) + ((x2 - x1)*(y1 -y3))) / (((x4 - x3)*(y1 -y2)) - ((x1 - x2)*(y4 - y3)))
+                m = (posx p1) + ta*(posx (subtraiVetores p2 p1))
+                n = (posy p1) + ta*(posy (subtraiVetores p2 p1))
+    
+    -- ** Funções sobre listas
+    
+    -- *** Funções gerais sobre listas.
+    --
+    -- Funções não disponíveis no 'Prelude', mas com grande utilidade.
+    
+    -- | Verifica se o indice pertence à lista.
+    --
+    -- __Sugestão:__ use a função 'length' que calcula tamanhos de listas
+
+    eIndiceListaValido :: Int -> [a] -> Bool
+    eIndiceListaValido m [] = False
+    --eIndiceListaValido 0 [a] = True
+    eIndiceListaValido m (h:s) | m<0 = False
+                               | m>a = False
+                               | otherwise = True
+                                 where 
+                                    a = (length (h:s)) - 1
+
+    -- ** Funções sobre matrizes.
+    
+    -- *** Funções gerais sobre matrizes.
+    
+    -- | A dimensão de um mapa dada como um par (/número de linhas/,/número de colunhas/).
+    type DimensaoMatriz = (Int,Int)
+    
+    -- | Uma posição numa matriz dada como um par (/linha/,/colunha/).
+    -- As coordenadas são dois números naturais e começam com (0,0) no canto superior esquerdo, com as linhas incrementando para baixo e as colunas incrementando para a direita:
+    --
+    -- <<http://li1.lsd.di.uminho.pt/images/posicaomatriz.png posicaomatriz>>
+    type PosicaoMatriz = (Int,Int)
+    
+    -- | Uma matriz é um conjunto de elementos a duas dimensões.
+    --
+    -- Em notação matemática, é geralmente representada por:
+    --
+    -- <<https://upload.wikimedia.org/wikipedia/commons/d/d8/Matriz_organizacao.png matriz>>
+    type Matriz a = [[a]]
+    
+    -- | Calcula a dimensão de uma matriz.
+    --
+    -- __NB:__ Note que não existem matrizes de dimensão /m * 0/ ou /0 * n/, e que qualquer matriz vazia deve ter dimensão /0 * 0/.
+    --
+    -- __Sugestão:__ relembre a função 'length', referida anteriormente.
+
+
+    dimensaoMatriz :: Matriz a -> DimensaoMatriz
+    dimensaoMatriz [] = (0,0)   
+    dimensaoMatriz l1@((a:b):t) =  (l,c)
+                           where
+                            l=length l1
+                            c=length (a:b)
+    dimensaoMatriz ([]:t) = (0,0)
+
+
+    
+    -- | Verifica se a posição pertence à matriz.
+    ePosicaoMatrizValida :: PosicaoMatriz -> Matriz a -> Bool 
+    ePosicaoMatrizValida (m,n) matriz | (m<=p && n<=o) = True
+                                      | otherwise=False
+                                       where
+                                          (p,o) = (a-1,b-1)
+                                          (a,b) = dimensaoMatriz matriz
+
+    -- * Funções recursivas.
+    
+    -- ** Funções sobre ângulos
+    
+    -- | Normaliza um ângulo na gama [0..360).
+    --  Um ângulo pode ser usado para representar a rotação
+    --  que um objecto efectua. Normalizar um ângulo na gama [0..360)
+    --  consiste, intuitivamente, em extrair a orientação do
+    --  objecto que resulta da aplicação de uma rotação. Por exemplo, é verdade que:
+    --
+    -- prop> normalizaAngulo 360 = 0
+    -- prop> normalizaAngulo 390 = 30
+    -- prop> normalizaAngulo 720 = 0
+    -- prop> normalizaAngulo (-30) = 330
+    normalizaAngulo :: Angulo -> Angulo
+    normalizaAngulo n |n<360 && n>=0 = n 
+                      |n<0 = normalizaAngulo (n + 360)
+                      |otherwise = normalizaAngulo  (n - 360)  
+
+    
+    -- ** Funções sobre listas.
+    
+    -- | Devolve o elemento num dado índice de uma lista.
+    --
+    -- __Sugestão:__ Não use a função (!!) :: [a] -> Int -> a :-)
+    encontraIndiceLista :: Int -> [a] -> a
+    encontraIndiceLista n (a:b) = aux1 n 0 (a:b)
+                                where                                             
+                                  aux1 n num (a:b) | n==num = a
+                                                   | otherwise = aux1 n (num+1) b 
+    
+    -- | Modifica um elemento num dado índice.
+    --
+    -- __NB:__ Devolve a própria lista se o elemento não existir.
+
+    atualizaIndiceLista :: Int -> a -> [a] -> [a]
+    atualizaIndiceLista n a m | length m>(n) = q++[a]++p
+                              | otherwise = m
+        where
+          q=take n m
+          p=drop (n+1) m
+
+    -- ** Funções sobre matrizes.
+    
+    -- | Devolve o elemento numa dada 'Posicao' de uma 'Matriz'.
+    encontraPosicaoMatriz ::PosicaoMatriz -> Matriz a -> a
+    encontraPosicaoMatriz (a,b) (m:n) = encontraIndiceLista b (encontraIndiceLista a (m:n))
+                                           
+
+    
+    -- | Modifica um elemento numa dada 'Posicao'
+    --
+    -- __NB:__ Devolve a própria 'Matriz' se o elemento não existir.
+    atualizaPosicaoMatriz :: PosicaoMatriz -> a -> Matriz a -> Matriz a
+    --atualizaPosicaoMatriz (m,n) alterar matriz = atualizaIndiceLista m (atualizaIndiceLista n alterar) matriz
+    atualizaPosicaoMatriz (a,b) alterar m = fst++[linha]++depois
+        where
+          fst= take a m
+          linha = atualizaIndiceLista b alterar (m!!a)
+          depois= drop (a+1) m
+    
+    -- * Funcoes extras usadas na Tarefa 2
+    -- | Devolve o elemento numa dada 'Posicao' de uma 'Matriz'.
+    encontraPosicaoMatriz' :: (Int,Double) -> [[a]]-> a
+    encontraPosicaoMatriz' (a,b) (m:n) = encontraIndiceLista (truncate b) (encontraIndiceLista a (m:n))
+
+    -- | Atualiza um determinado elemento de um 'Mapa',através de uma função dada.
+    updateLinha::Int->(a->a)->[a]->[a]
+    updateLinha p f v = as ++ (f b:bs)
+      where 
+        (as,b:bs)= splitAt p v
+    -- | Atualiza um determinado elemento do 'Mapa', através de uma função dada.
+    updateMatriz::(Int,Double)->(a->a)->[[a]]->[[a]]
+    updateMatriz (a,b) f m = updateLinha a (updateLinha (truncate b) f) m
+    -- | Verifica se a 'Posicao' pertence ao 'Mapa'.
+    ePosicaoMatrizValida' :: (Int,Double) -> Matriz a -> Bool 
+    ePosicaoMatrizValida' (m,n) matriz | (m<=p && (truncate n)<=o) = True
+                                      | otherwise=False
+                                        where
+                                            (p,o) = (a-1,b-1)
+                                            (a,b) = dimensaoMatriz matriz
+
+    -- * Funcoes extras usadas na tarefa 3
+
+    -- | Função que devolve a 'Matriz' transposta, de uma 'Matriz' dada.
+    transposta::[[a]]->[[a]]
+    transposta ([]:_)=[]
+    transposta m =(map head m):(transposta (map tail m))
+     
+    -- | Função que ordena uma lista. 
+    iSorted::Ord a =>[a]->[a]
+    iSorted [] =[]
+    iSorted (a:b) = insert1 a (iSorted b)
+    
+    -- | Função auxiliar do 'isorted'. 
+    insert1:: Ord a=>a->[a]->[a]
+    insert1 a [] = [a]
+    insert1 a (m:n) | a>m =  m:insert1 a n
+                    | otherwise = a:m:n
+
+    -- | Função que dando uma lista de posições, devolve os elementos dessas posições. 
+    daPosicoes::[Int]->[a]->[a]
+    daPosicoes [] _ = []
+    daPosicoes (m:n) l1@(a:b) | m<=(length l1) = (encontraIndiceLista m l1):(daPosicoes n l1)
+                              | otherwise = []
+    -- | Função que transforma uma lista, de listas, de listas só numa única lista.  
+    lista::[[[a]]]->[a]
+    lista [] = []
+    lista (a:b) = (lista1 a ) ++ lista b
+
+    -- | Função que tranforma uma lista, de lista só numa única lista. 
+    lista1::[[a]]->[a]
+    lista1 [] = []
+    lista1 (a:b) = a ++ (lista1 b)
+    
+    -- | Função que tranforma uma lista, de lista, de listas numa lista, de listas. 
+    lista2::[[[a]]]->[[a]]
+    lista2 [] = []
+    lista2 (a:b) = a ++ (lista2 b)
+
+    -- | Função que elimina elementos iguais numa lista. 
+    eliminariguais::[Int]->[Int]
+    eliminariguais [] = []
+    eliminariguais (a:b) | elem a b = eliminariguais b 
+                         | otherwise = a:(eliminariguais b)
+
+    -- | Função que retira o primeiro elemento de cada lista. 
+    retirar::[[a]]->[[a]]
+    retirar [] = []
+    retirar(a:b) = [retirar1elemento a]++retirar b
+
+    -- | Função que retira o primeiro elemento de uma lista. 
+    retirar1elemento::[a]->[a]
+    retirar1elemento [] = []                     
+    retirar1elemento (a:b) = b
+
+    -- | Elimina listas só com um elemento.
+    retirariguais::[[a]]->[[a]]
+    retirariguais [] = []
+    retirariguais (a:b) | length a==1 = retirariguais b 
+                        | otherwise = a:retirariguais b
+
+    -- | Elimina posições de uma lista de 'Instrucoes'.
+    dele::Instrucoes->Int->[Int]->Instrucoes
+    dele [] _ _ = []
+    dele l _ [] = l
+    dele (a:b) num (m:n) | num==m = dele b (num+1) n 
+                         | otherwise = a:(dele b (num+1) (m:n))
+ 
+    -- | Deteta o que é uma 'Instrucao'.
+    averigua::Instrucao->Instrucao
+    averigua (Anda a piso) = Anda a piso
+    averigua (Sobe a piso h) = Sobe a piso h 
+    averigua (Desce a piso h) = Desce a piso h 
+    averigua (Repete num [a]) =Repete num [averigua a] 
+
+    -- | Devolve a pista onde se encontra a 'Instrucao'.
+    h::Instrucao->[Int]
+    h (Sobe y _ _ )= y
+    h (Anda y _ )= y
+    h (Desce y _ _ )= y
+    h (Repete _ [a]) = h a
+
+    -- * Testes relativos à Tarefa2
+    testesTarefa2:: [(Int,Jogada,Estado)]
+    testesTarefa2=[a1,a2,a3,a4,a5,a6,a7,a8,a9,a10,a11,a12,a13,a14,a15,a16,a17,a18,a19,a20,a21,a22,a23,a24,a25,a26,a27,a28,a29,a30,a31,a32,a33,a34,a35,a36,a37,a38,a39,a40,a41,a42,a43,a44,a45,a46,a47,a48,a49,a50,a51,a52,a53,a54,a55,a56,a57,a58,a59,a60,a61,a62,a63]
+      where
+      -- testesT2 = [(1,Acelera,Estado [[Recta Terra 0,Recta Terra 0,Recta Terra 0,Recta Terra 0,Recta Terra 0],[Recta Terra 0,Recta Terra 0,Recta Terra 0,Recta Terra 0,Recta Terra 0]] [(Jogador 2 2.1 0 3 (Chao False))])]
+          a1  = (1,Movimenta B,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 2.1 0 3 (Chao False)) ])
+          --testes usados para verificar a jogada dispara 
+          a2  = (1,Dispara,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 2.1 0 3 (Chao False)) ])
+          a3  = (1,Dispara,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 5.1 0 3 (Chao False)) ])
+          --dispara para recta
+          a4  = (1,Dispara,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 9.5 0 3 (Chao False)) ])
+          a5  = (1,Dispara,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 9.5 0 3 (Ar 2 0 0)) ])
+          --testes usados para o Movimenta cima 
+          {--cima recta recta mesma altura--} 
+          a6  = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 9.5 0 3 (Chao False)) ])
+          {--cima no limite--} 
+          a7  = (0,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 9.5 0 3 (Chao False)) ])
+          a8  = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 6.4 0 3 (Chao False)) ])
+          a9  = (1,Movimenta B,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 0 6.4 0 3 (Chao False)) ])
+          a10 = (1,Movimenta B,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 0 6.7 0 3 (Chao False)) ])
+          --testar esquerda
+          a11 = (1,Movimenta E,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 3.2 0 3 (Ar 6 15 0)) ])
+          a12 = (1,Movimenta E,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 3.2 0 3 (Ar 6 85 0)) ])
+          a13 = (1,Movimenta E,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 3.2 0 3 (Chao False)) ])
+          a14 = (1,Movimenta E,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 3.2 0 3 (Morto 1)) ])
+          --testar direita
+          a15 = (1,Movimenta D,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 3.2 0 3 (Ar 6 15 0)) ])
+          a16 = (1,Movimenta D,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 3.2 0 3 (Ar 6 (-80) 0))])
+          a17 = (1,Movimenta D,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 3.2 0 3 (Morto 1)) ])
+          --testar esquerda
+          a18 = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 5.2 0 3 (Chao False)) ])
+          --  = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 11.2 0 3 (Chao False)) ])
+          a19 = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 10.4 0 3 (Chao False)) ])
+          a20 = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 12.2 0 3 (Chao False)) ])
+          a21 = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 13.5 0 3 (Chao False)) ])
+          a22 = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 14.2 0 3 (Chao False)) ])
+          a23 = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 14.5 0 3 (Chao False)) ])
+          a24 = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 14.75 0 3 (Chao False)) ])
+          a25 = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 14.8 0 3 (Chao False)) ])
+          a26 = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 16.99 0 3 (Chao False)) ])
+          a27 = (1,Movimenta C,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 16.3 0 3 (Chao False)) ])
+          a28 = (4,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 16.3 0 3 (Chao False)),(Jogador 3 6.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a29 = (1,Movimenta B,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 14.5 0 3 (Chao False)) ])
+          a30 = (1,Acelera,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 2.1 0 3 (Chao False)) ])
+          a31 = (1,Acelera,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 2.1 0 3 (Chao True)) ])
+          a32 = (1,Desacelera,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 2.1 0 3 (Chao False)) ])
+          a33 = (1,Desacelera,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 2.1 0 3 (Chao True)) ])  
+          a34 = (1,Acelera,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 2.1 0 3 (Ar 4 15 0)) ])
+          a35 = (1,Acelera,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 2.1 0 3 (Morto 1)) ])      
+          a36 = (1,Desacelera,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 2.1 0 3 (Ar 4 15 0)) ])
+          a37 = (1,Desacelera,Estado (gera 2 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 2.1 0 3 (Morto 1)) ])      
+          a38 = (0,Dispara,Estado (gera 2 20 4) [(Jogador 0 1.1 0 3 (Chao False)),(Jogador 1 14.5 0 3 (Chao False)) ]) 
+          a39 = (0,Dispara,Estado (gera 2 20 4) [(Jogador 0 0.6 0 3 (Chao False)),(Jogador 1 14.5 0 3 (Chao False)) ])       
+          a40 = (1,Dispara,Estado (gera 2 20 4) [(Jogador 0 0.6 0 3 (Chao False)),(Jogador 1 14.5 0 0 (Chao False)) ])      
+          a41 = (1,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 1 5.4 0 3 (Chao False)),(Jogador 3 6.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a42 = (1,Movimenta C,Estado (gera 5 20 4) [(Jogador 0 2.1 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a43 = (0,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 11.2 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a44 = (0,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 11.5 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a45 = (0,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 11.9 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a46 = (0,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 12.2 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a47 = (0,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 12.5 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a48 = (0,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 12.9 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a49 = (0,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 13.5 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a50 = (0,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 13 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a51 = (0,Movimenta B,Estado (gera 5 20 4) [(Jogador 0 13.9 0 3 (Chao False)),(Jogador 2 5.4 0 3 (Chao False)),(Jogador 3 8.1 0 3 (Chao False)),(Jogador 3 10.5 0 3 (Chao False)),(Jogador 2 2.1 0 3 (Chao False))])
+          a52 = (0,Dispara,Estado (gera 1 20 4) [(Jogador 0 6.1 0 3 (Chao False))])
+          a53 = (1,Movimenta B,Estado (gera 4 40 4) [(Jogador 0 0.6 0 3 (Chao False)),(Jogador 1 14.5 0 0 (Chao False)),(Jogador 2 0.6 0 3 (Chao False)),(Jogador 3 0.6 0 3 (Chao False)) ])      
+          a54 = (2,Movimenta B,Estado (gera 4 40 4) [(Jogador 0 0.6 0 3 (Chao False)),(Jogador 1 14.5 0 0 (Chao False)),(Jogador 2 34.6 0 3 (Chao False)),(Jogador 3 0.6 0 3 (Chao False)) ])      
+          a55 = (1,Movimenta C,Estado (gera 4 40 4) [(Jogador 0 0.6 0 3 (Chao False)),(Jogador 1 10.5 0 0 (Chao False)),(Jogador 2 34.6 0 3 (Chao False)),(Jogador 3 0.6 0 3 (Chao False)) ])      
+          a56 = (2,Movimenta C,Estado (gera 4 40 4) [(Jogador 0 0.6 0 3 (Chao False)),(Jogador 1 10.5 0 0 (Chao False)),(Jogador 2 34.6 0 3 (Chao False)),(Jogador 3 0.6 0 3 (Chao False)) ])      
+          a57 = (3,Movimenta C,Estado (gera 4 40 4) [(Jogador 0 0.6 0 3 (Chao False)),(Jogador 1 10.5 0 0 (Chao False)),(Jogador 2 34.6 0 3 (Chao False)),(Jogador 3 21.5 0 3 (Chao False)) ])      
+          a58 = (0,Movimenta B,Estado (gera 4 40 4) [(Jogador 0 2.2 0 3 (Chao False)),(Jogador 1 10.5 0 0 (Chao False)),(Jogador 2 34.6 0 3 (Chao False)),(Jogador 3 21.5 0 3 (Chao False)) ])      
+          a59 = (0,Movimenta C,Estado (gera 4 40 4) [(Jogador 0 2.8 0 3 (Chao False)),(Jogador 1 10.5 0 0 (Chao False)),(Jogador 2 34.6 0 3 (Chao False)),(Jogador 3 21.5 0 3 (Chao False)) ])      
+          a60 = (0,Movimenta B,Estado (gera 4 40 4) [(Jogador 0 2.15 0 3 (Chao False)),(Jogador 1 10.5 0 0 (Chao False)),(Jogador 2 34.6 0 3 (Chao False)),(Jogador 3 21.5 0 3 (Chao False)) ])      
+          a61 = (1,Movimenta B,Estado (gera 4 40 4) [(Jogador 0 2.15 0 3 (Chao False)),(Jogador 1 6.2500100100000000000000000000000000001 0 0 (Chao False)),(Jogador 2 34.6 0 3 (Chao False)),(Jogador 3 21.5 0 3 (Chao False)) ])      
+          a62 = (2,Movimenta B,Estado (gera 4 40 4) [(Jogador 0 2.15 0 3 (Chao False)),(Jogador 1 6.2 0 0 (Chao False)),(Jogador 1 35.9 0 3 (Chao False)),(Jogador 3 22.1 0 3 (Chao False)) ])      
+          a63 = (2,Movimenta B,Estado (gera 4 40 4) [(Jogador 0 2.15 0 3 (Chao False)),(Jogador 1 6.2 0 0 (Chao False)),(Jogador 1 35.3 0 3 (Chao False)),(Jogador 3 21.5 0 3 (Chao False)) ])      
+          a64 = (0,Movimenta B,Estado (gera 2 5 4) [(Jogador 0 4.9 0 3 (Chao False)),(Jogador 1 2.2 0 0 (Chao False)) ])      
