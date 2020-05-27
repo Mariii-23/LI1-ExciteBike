@@ -8,4 +8,4 @@
     * 3Players
     * 4Players
 - Desenvolvido por :
-   * *Mariana Dinis Rodrigues
+   * *Mariana Dinis Rodrigues*
