@@ -1,5 +1,9 @@
 # LI1-ExciteBike
 ### Universidade do Minho
 ### Laboratórios de Informática 1 || [MIEI]
-* - ola -
-
+- Corrida de jipes :)
+- Modos de jogo : 
+    * 1Player
+    * 2Players
+    * 3Players
+    * 4Players
