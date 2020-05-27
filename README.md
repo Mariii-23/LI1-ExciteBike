@@ -7,3 +7,5 @@
     * 2Players
     * 3Players
     * 4Players
+- Desenvolvido por :
+   * *Mariana Dinis Rodrigues
