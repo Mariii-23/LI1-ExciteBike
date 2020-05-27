@@ -1,5 +1,5 @@
 # LI1-ExciteBike
-
-##Arroz
-experiencia
+### Universidade do Minho
+### Laboratórios de Informática 1 || [MIEI]
+* oi *
 
